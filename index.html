@@ -1845,12 +1845,21 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
 
   /* ---- Gate ---------------------------------------------------------- */
   document.getElementById('gateForm').addEventListener('submit',function(e){
-    e.preventDefault();var input=document.getElementById('email');var note=document.getElementById('gateNote');
+    e.preventDefault();var input=document.getElementById('email');var note=document.getElementById('gateNote');var button=e.currentTarget.querySelector('button[type="submit"]');
     if(!input.checkValidity()){note.textContent='Enter a valid email address.';input.focus();return;}
-    demoUnlocked=true;set('pm-lookmore-unlocked','1');
-    if(SHEET_ENDPOINT){fetch(SHEET_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:input.value.trim()})}).catch(function(){});}
-    input.value='';stack.pop();go('lookmore');
-    setTimeout(function(){if(get('pm-home-screen-prompt-dismissed')!=='1')openInstallPrompt();},420);
+    var email=input.value.trim().toLowerCase();
+    button.disabled=true;button.textContent='UNLOCKING\u2026';note.textContent='Saving your access\u2026';
+    window.saveEmail(email).then(function(){
+      demoUnlocked=true;set('pm-lookmore-unlocked','1');
+      return window.track('email_submitted',{source:'look_more'});
+    }).then(function(){
+      return window.track('look_more_unlocked');
+    }).then(function(){
+      note.textContent='Access unlocked. Welcome to Look More.';button.textContent='UNLOCKED \u2713';input.value='';stack.pop();go('lookmore');
+      setTimeout(function(){if(get('pm-home-screen-prompt-dismissed')!=='1')openInstallPrompt();},420);
+    }).catch(function(error){
+      console.error('Access error:',error);note.textContent='Something went wrong. Please try again.';button.disabled=false;button.textContent='UNLOCK \u203a';
+    });
   });
   var appearanceToggle=document.getElementById('appearanceToggle');
   function theme(value){
@@ -3278,6 +3287,8 @@ body .menu-item{
 #v-mirror21.on~.appearance-toggle .appearance-moon{display:block}
 
 </style>
+
+<script type="module" src="/src/main.js"></script>
 
 </body>
 </html>
