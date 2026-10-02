@@ -1,0 +1,62 @@
+<h2 class="sr-only">Two Pocket Mirror screens side by side: first, the Look More email unlock gate with tagline "Turn knowing into doing", second, the unlocked list of twelve first-person problem prompts as a simple tappable menu.</h2>
+<div style="display:flex; justify-content:center; gap:24px; padding:1.5rem 0; background:#e9e9e7; border-radius:16px; flex-wrap:wrap;">
+
+<div style="width:300px; background:#000; border-radius:40px; padding:12px;">
+<div style="background:#000; border-radius:30px; padding:0; min-height:640px; overflow:hidden; font-family:var(--font-sans); display:flex; flex-direction:column;">
+<div style="padding:20px 20px 12px;">
+<div style="font-size:11px; color:#888;">&#8249; Back</div>
+</div>
+<div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 26px; text-align:center;">
+<div style="width:56px; height:56px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #3a3a3a, #0a0a0a 70%); border:2px solid; border-image:linear-gradient(135deg,#888,#222) 1; margin:0 auto 22px;"></div>
+<div style="font-size:9px; letter-spacing:2px; color:#888; margin-bottom:8px;">LOOK MORE</div>
+<div style="font-size:20px; font-weight:500; color:#fff; line-height:1.35; margin-bottom:14px;">Turn knowing<br/>into doing.</div>
+<div style="font-size:12px; color:#999; line-height:1.5; margin-bottom:28px;">Twelve of the moments people get stuck most. Real stories. One move each. Unlock the full library with your email.</div>
+<input placeholder="Email address" style="width:100%; box-sizing:border-box; padding:13px 16px; border-radius:10px; border:1px solid #333; background:#0a0a0a; color:#fff; font-size:13px; margin-bottom:12px;" />
+<div style="background:#fff; color:#000; padding:13px; border-radius:10px; font-size:13px; font-weight:500; text-align:center;">Unlock</div>
+</div>
+<div style="padding:20px; text-align:center;">
+<div style="font-size:9px; letter-spacing:1px; color:#555;">POWERED BY DAILY XCELLENCE</div>
+</div>
+</div>
+</div>
+
+<div style="width:300px; background:#000; border-radius:40px; padding:12px;">
+<div style="background:#000; border-radius:30px; padding:0; min-height:640px; overflow:hidden; font-family:var(--font-sans); display:flex; flex-direction:column;">
+<div style="padding:20px 20px 6px;">
+<div style="font-size:11px; color:#888;">&#8249; Back</div>
+</div>
+<div style="padding:6px 22px 14px; text-align:center;">
+<div style="font-size:9px; letter-spacing:2px; color:#888; margin-bottom:6px;">LOOK MORE</div>
+<div style="font-size:16px; font-weight:500; color:#fff;">What's going on?</div>
+</div>
+<div style="padding:6px 16px; display:flex; flex-direction:column; gap:7px; overflow-y:auto;" id="list"></div>
+<div style="padding:16px 20px; text-align:center; border-top:1px solid #1a1a1a; margin-top:auto;">
+<div style="font-size:9px; letter-spacing:1px; color:#555;">POWERED BY DAILY XCELLENCE</div>
+</div>
+</div>
+</div>
+
+</div>
+<script>
+const items = [
+  "I know what I need to do. I'm just not doing it.",
+  "I need to have a difficult conversation.",
+  "I feel stuck.",
+  "I've got too much going on.",
+  "I've had a wobble.",
+  "I'm doubting myself.",
+  "Change is happening and I'm struggling.",
+  "I've lost direction.",
+  "My team isn't pulling together.",
+  "I need to make a decision.",
+  "I'm feeling the pressure.",
+  "I'm playing it too safe."
+];
+const el = document.getElementById('list');
+items.forEach((t)=>{
+  const row = document.createElement('div');
+  row.style.cssText = "border:1px solid #2a2a2a; border-radius:10px; padding:11px 13px; display:flex; justify-content:space-between; align-items:center; background:#0a0a0a;";
+  row.innerHTML = `<span style="font-size:12px; color:#eee; line-height:1.3; padding-right:8px;">${t}</span><span style="font-size:14px; color:#777; flex-shrink:0;">&#8250;</span>`;
+  el.appendChild(row);
+});
+</script>
