@@ -17,6 +17,10 @@ function copyRuntimeAssets() {
           recursive: true
         })
       }
+      for (const file of ['manifest.json', 'sw.js']) {
+        cpSync(resolve(process.cwd(), file), resolve(outDir, file))
+      }
+      cpSync(resolve(process.cwd(), 'manifest.json'), resolve(outDir, 'manifest.webmanifest'))
     }
   }
 }
