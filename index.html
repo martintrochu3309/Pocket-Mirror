@@ -1352,20 +1352,16 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
   ];
 
   var STAGE_CARDS = {
-    awareness:[0,13,14,17,19,20,22],
-    acceptance:[2,5,6,7,10,15],
-    action:[1,3,4,8,9,11,12,16,18,21,23]
+    awareness:{folder:'White Nudge Card', numbers:[1,14,15,18,20,21,23]},
+    acceptance:{folder:'Black Nudge Card', numbers:[3,6,7,8,11,16]},
+    action:{folder:'Gold Nudge Card', numbers:[2,4,5,9,10,12,13,17,19,22,24]}
   };
 
   function buildStageDeck(key) {
-    var sources=STAGE_CARDS[key].slice();
-    if(key==='action') sources.unshift(24);
-    else sources.push(24);
-    return sources.map(function(source,index){
-      if(source===24) return {source:source,card:GLANCE_CARDS[source],invert:false};
-      var naturalBlack=source<12;
-      var desiredBlack=key==='awareness' ? index%2===0 : index%2===1;
-      return {source:source,card:GLANCE_CARDS[source],invert:naturalBlack!==desiredBlack};
+    var stage=STAGE_CARDS[key];
+    return stage.numbers.map(function(number){
+      var source=number-1;
+      return {source:source,folder:stage.folder,number:number,card:GLANCE_CARDS[source]};
     });
   }
 
@@ -1644,10 +1640,18 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
     host.style.setProperty('--saver-card-width',bounds.width.toFixed(1)+'px');
     host.style.setProperty('--saver-card-left',bounds.left.toFixed(1)+'px');
   }
-  function cardImage(i){return 'images/nudge-cards/nudge-card-'+String(i+3).padStart(2,'0')+'.jpg';}
+  function cardImage(card){
+    var folder=card.folder||'nudge-cards';
+    var number=card.number||((card.source||0)+3);
+    if(folder==='nudge-cards'){
+      return 'images/nudge-cards/nudge-card-'+String(number).padStart(2,'0')+'.jpg';
+    }
+    var color=folder.replace(' Nudge Card','');
+    return 'images/'+encodeURIComponent(folder)+'/Nudge_Card_'+color+'_'+String(number).padStart(2,'0')+'.png';
+  }
   function paintSaver(card){
     card=card||activeDeck[picked]||{source:0,invert:false};
-    var source=new Image(),path=cardImage(card.source),wallpaper=document.getElementById('saverWallpaper');
+    var source=new Image(),path=cardImage(card),wallpaper=document.getElementById('saverWallpaper');
     wallpaper.style.opacity='0';
     source.onload=function(){
       var canvas=document.createElement('canvas'),ctx=canvas.getContext('2d');
@@ -1720,7 +1724,7 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
       c.className = "ncard"+(item.invert?" is-inverted":"");
       c.setAttribute("role", "option");
       c.setAttribute("aria-label",item.card.h.replace(/\n/g,' '));
-      c.innerHTML='<img src="'+cardImage(item.source)+'" alt="">';
+      c.innerHTML='<img src="'+cardImage(item)+'" alt="">';
       flow.appendChild(c);
       cards.push(c);
     });
