@@ -779,7 +779,7 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
   </section>
 </div>
 
-<section class="view" id="v-home">
+<section class="view pocket-home" id="v-home">
   <div class="bar">
     <span></span>
     <button class="burger" data-menu type="button" aria-label="Menu"><i></i><i></i></button>
@@ -790,52 +790,37 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
       <h1>CHOOSE YOUR PATH</h1>
     </div>
 
-    <div class="booster-carousel" id="boosterCarousel" tabindex="0" aria-label="Choose your path">
-      <button class="booster-card" data-path="awareness" type="button" aria-label="Select Awareness path">
-        <img src="images/Awareness Booster.png" alt="Awareness. Can I see it?">
+    <div class="booster-carousel" id="boosterCarousel" tabindex="0" role="region" aria-roledescription="carousel" aria-label="Choose your path" aria-describedby="boosterKeyboardHint">
+      <button class="booster-card" data-path="awareness" type="button" aria-label="SEE IT — Open Awareness path">
+        <img src="images/Awareness Booster.png" alt="">
       </button>
-      <button class="booster-card" data-path="acceptance" type="button" aria-label="Select Acceptance path">
-        <img src="images/Acceptance Booster.png" alt="Acceptance. Can I own it?">
+      <button class="booster-card" data-path="acceptance" type="button" aria-label="OWN IT — Open Acceptance path">
+        <img src="images/Acceptance Booster.png" alt="">
       </button>
-      <button class="booster-card" data-path="action" type="button" aria-label="Select Action path">
-        <img src="images/Action Booster.png" alt="Action. What am I going to change?">
+      <button class="booster-card" data-path="action" type="button" aria-label="CHANGE IT — Open Action path">
+        <img src="images/Action Booster.png" alt="">
       </button>
     </div>
 
-    <button class="home-path-open" id="openSelectedPath" type="button">
-      <span>OPEN THIS PATH</span><b aria-hidden="true">&#8250;</b>
-    </button>
+    <p class="sr-only" id="boosterKeyboardHint">Use the left and right arrow keys to explore. Tab to any mirror and press Enter to open its path.</p>
+    <p class="home-path-question" id="boosterQuestion" aria-live="polite" aria-atomic="true">Can I own it?</p>
   </div>
 </section>
 
 
 <!-- =========================== 3 · REFLECTION ========================== -->
-<section class="view" id="v-stage">
+<section class="view reflection-path" id="v-stage">
   <div class="bar">
     <button class="back" data-back type="button">&#8249;&nbsp; BACK</button>
     <button class="burger" data-menu type="button" aria-label="Menu"><i></i><i></i></button>
   </div>
   <h1 id="stageName" class="sr-only">AWARENESS</h1>
-  <div class="stage-tabs" aria-label="Reflection sections"><button id="glanceTab" class="active" aria-pressed="true">THE GLANCE</button><button id="discloseBtn" aria-expanded="false" aria-controls="lookDrawer">THE LOOK</button><button data-go="lookmore">LOOK MORE</button></div>
   <div class="page">
     <p class="eyebrow" id="stageAsk"></p>
     <div id="glanceExperience">
-      <div class="flow" id="flow" tabindex="0" role="listbox" aria-label="The Glance cards">
-        <div class="flow-glow"></div>
+      <div class="flow" id="flow" tabindex="0" role="listbox" aria-label="Reflection cards" aria-describedby="reflectionKeyboardHint">
       </div>
-      <div class="stack stage-actions stage-cta-width">
-        <button class="block" id="stageLookButton" data-look type="button"><span>THE LOOK</span></button>
-      </div>
-    </div>
-    <div class="drawer" id="lookDrawer"><div><div class="look-body" id="stageLook"></div><p class="pull" id="stagePull"></p></div></div>
-    <div class="stack stage-cta-width" id="lookMoreAction">
-      <button class="lookmore is-look-more" data-look type="button">
-        <span class="lookmore-row">
-          <span class="lookmore-t">LOOK MORE</span>
-          <svg class="arrow" width="24" height="8" viewBox="0 0 24 8" aria-hidden="true"><path d="M0 4h22M18.6.7 22 4l-3.4 3.3"/></svg>
-        </span>
-        <span class="lookmore-s">(TURN KNOWING INTO DOING)</span>
-      </button>
+      <p class="sr-only" id="reflectionKeyboardHint">Use the left and right arrow keys to choose a card. Press Enter to open the centered card.</p>
     </div>
   </div>
 </section>
@@ -1043,7 +1028,7 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
 
 
 <!-- ============================== MENU ================================= -->
-<nav id="bottomNav" class="bottom-nav" aria-label="Main navigation" hidden><button data-go="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 3l9 8M6 10v11h5v-7h3v7h5V10"/></svg>HOME</button><button data-go="awareness"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>AWARENESS</button><button data-go="acceptance"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M3 22c0-10 18-10 18 0Z"/></svg>ACCEPTANCE</button><button data-go="action"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V14h4v7ZM10 21V9h4v12ZM17 21V3h4v18Z"/></svg>ACTION</button><button data-go="lookmore"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="4" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="20" cy="12" r="1"/></svg><span>LOOK<br>MORE</span></button><button data-go="mirror21"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>MIRROR 21</button></nav>
+<nav id="bottomNav" class="bottom-nav" aria-label="Main navigation" hidden><button data-go="awareness"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>AWARENESS</button><button data-go="acceptance"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M3 22c0-10 18-10 18 0Z"/></svg>ACCEPTANCE</button><button data-go="action"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V14h4v7ZM10 21V9h4v12ZM17 21V3h4v18Z"/></svg>ACTION</button><button data-go="lookmore"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="4" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="20" cy="12" r="1"/></svg><span>LOOK<br>MORE</span></button><button data-go="mirror21"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>MIRROR 21</button></nav>
 <button class="appearance-toggle" id="appearanceToggle" type="button" aria-label="Switch to light mode">
   <svg class="appearance-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"/></svg>
   <svg class="appearance-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15A9 9 0 0 1 9 4a9 9 0 1 0 11 11Z"/></svg>
@@ -1352,17 +1337,23 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
   ];
 
   var STAGE_CARDS = {
-    awareness:{folder:'White Nudge Card', numbers:[1,14,15,18,20,21,23]},
-    acceptance:{folder:'Black Nudge Card', numbers:[3,6,7,8,11,16]},
-    action:{folder:'Gold Nudge Card', numbers:[2,4,5,9,10,12,13,17,19,22,24]}
+    awareness:{folder:'White Nudge Card', numbers:[1,14,15,18], lookMore:'Awareness', ask:'Can I see it?'},
+    acceptance:{folder:'Black Nudge Card', numbers:[3,6,7,8], lookMore:'Acceptance', ask:'Can I own it?'},
+    action:{folder:'Gold Nudge Card', numbers:[2,4,5,9], lookMore:'Action', ask:'What am I going to change?'}
   };
 
   function buildStageDeck(key) {
     var stage=STAGE_CARDS[key];
-    return stage.numbers.map(function(number){
+    var deck=stage.numbers.map(function(number){
       var source=number-1;
       return {source:source,folder:stage.folder,number:number,card:GLANCE_CARDS[source]};
     });
+    deck.push({
+      image:'images/Look More Nudge Card '+stage.lookMore+'.png',
+      destination:'lookmore',
+      card:{h:'LOOK MORE',w:stage.ask}
+    });
+    return deck;
   }
 
   var EPISODES = [
@@ -1395,8 +1386,22 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
     set('pm-lookmore-unlocked','0');
     set(accessReset,'1');
   }
+  /* Reset only the requesting browser, leaving other visitors' access intact. */
+  var accessPreviewUrl=new URL(window.location.href);
+  if(accessPreviewUrl.searchParams.get('reset-lookmore')==='1'){
+    set('pm-lookmore-unlocked','0');
+    set('pm-home-screen-prompt-dismissed','0');
+    accessPreviewUrl.searchParams.delete('reset-lookmore');
+    try{window.history.replaceState(window.history.state,'',accessPreviewUrl.href);}catch(e){}
+  }
   var stack = [], current = "open", demoUnlocked = get('pm-lookmore-unlocked') === '1';
 
+
+  function syncNavigation(where) {
+    var visible=demoUnlocked && where!=='open' && where!=='saver' && where!=='home';
+    document.getElementById('bottomNav').hidden=!visible;
+    document.documentElement.style.setProperty('--stage-nav-space',visible?'96px':'0px');
+  }
 
   function show(where, opts) {
     opts = opts || {};
@@ -1424,7 +1429,7 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
     document.body.style.overflow = (where === "open" || where === "saver") ? "hidden" : "";
     window.scrollTo(0, 0);
     current = where;
-    document.getElementById('bottomNav').hidden = where === 'open' || where === 'saver';
+    syncNavigation(where);
     document.querySelectorAll('#bottomNav [data-go]').forEach(function(b){b.classList.toggle('active',b.dataset.go===where); if(b.dataset.go===where)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
   }
 
@@ -1436,78 +1441,83 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
     if (prev) { lastOpts = prev.o || {}; show(prev.w, lastOpts); } else { show("home"); }
   }
 
-  /* ---- Home path carousel ------------------------------------------ */
+  /* ---- Home path carousel: continuous phase, shared by drag and settling. ---- */
   var boosterPaths=['awareness','acceptance','action'];
-  var selectedBooster=0;
+  var boosterQuestions=['Can I see it?','Can I own it?','What am I going to change?'];
   var boosterCards=Array.prototype.slice.call(document.querySelectorAll('.booster-card'));
   var boosterCarousel=document.getElementById('boosterCarousel');
-  var boosterStartX=null,boosterDragged=false;
-  function boosterOffset(index){
-    return index-selectedBooster;
-  }
-  function renderBoosters(progress){
-    boosterCards.forEach(function(card,index){
-      var offset=boosterOffset(index)+progress;
-      var depth=Math.abs(offset);
-      var direction=offset<0?-1:1;
-      var x=depth<=1?depth*70:70+(depth-1)*42;
-      var opacity=depth<=1?1-depth*.48:Math.max(.18,.52-(depth-1)*.22);
-      var scale=depth<=1?1-depth*.36:Math.max(.44,.64-(depth-1)*.14);
-      var rotation=depth<=1?depth*12:12+(depth-1)*4;
-      card.style.setProperty('--booster-position',offset.toFixed(3));
-      card.style.setProperty('--booster-x',(direction*x).toFixed(2)+'%');
-      card.style.setProperty('--booster-y',(depth<=1?depth*5:Math.min(8,5+(depth-1)*3)).toFixed(2)+'%');
-      card.style.setProperty('--booster-rotation',(direction*-rotation).toFixed(2)+'deg');
-      card.style.setProperty('--booster-scale',scale.toFixed(3));
-      card.style.setProperty('--booster-opacity',opacity.toFixed(3));
-      card.style.zIndex=String(Math.round(30-depth*10));
-    });
-  }
+  var boosterQuestion=document.getElementById('boosterQuestion');
+  var boosterPhase=1,boosterFrame=0,boosterPointer=null,boosterSuppressClick=false;
+  var boosterMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
   function paintBoosters(){
+    var selected=((Math.round(boosterPhase)%3)+3)%3;
     boosterCards.forEach(function(card,index){
-      var active=index===selectedBooster;
-      card.classList.toggle('is-active',active);
-      card.setAttribute('aria-current',active?'true':'false');
+      var angle=(index-boosterPhase)*Math.PI*2/3;
+      var depth=(1-Math.cos(angle))/1.5;
+      card.style.setProperty('--booster-x',(Math.sin(angle)*75.0555).toFixed(4)+'%');
+      card.style.setProperty('--booster-y',(-depth*13).toFixed(4)+'%');
+      card.style.setProperty('--booster-rotation',(-Math.sin(angle)*13.8564).toFixed(4)+'deg');
+      card.style.setProperty('--booster-scale',(1-depth*.26).toFixed(4));
+      card.style.zIndex=String(Math.round(100-depth*50));
+      card.classList.toggle('is-active',index===selected);
+      if(index===selected)card.setAttribute('aria-current','true');else card.removeAttribute('aria-current');
     });
-    renderBoosters(0);
+    boosterQuestion.textContent=boosterQuestions[selected];
   }
-  function turnBooster(step){
-    selectedBooster=Math.max(0,Math.min(boosterCards.length-1,selectedBooster+step));
-    paintBoosters();
+  function settleBooster(target){
+    cancelAnimationFrame(boosterFrame);
+    var from=boosterPhase,start=performance.now();
+    if(boosterMotion.matches){boosterPhase=target;paintBoosters();return;}
+    function tick(now){
+      var t=Math.min(1,(now-start)/500);
+      boosterPhase=from+(target-from)*(1-Math.pow(1-t,3));
+      paintBoosters();
+      if(t<1)boosterFrame=requestAnimationFrame(tick);
+    }
+    boosterFrame=requestAnimationFrame(tick);
   }
   boosterCarousel.addEventListener('pointerdown',function(e){
-    boosterStartX=e.clientX;boosterDragged=false;
-    boosterCarousel.classList.add('is-dragging');
-    boosterCarousel.setPointerCapture(e.pointerId);
+    if(!e.isPrimary||e.button!==0||boosterPointer)return;
+    cancelAnimationFrame(boosterFrame);
+    boosterSuppressClick=false;
+    boosterPointer={id:e.pointerId,x:e.clientX,y:e.clientY,phase:boosterPhase,dragged:false};
   });
   boosterCarousel.addEventListener('pointermove',function(e){
-    if(boosterStartX===null)return;
-    var distance=e.clientX-boosterStartX;
-    if(Math.abs(distance)>8)boosterDragged=true;
-    var slot=Math.max(140,boosterCarousel.clientWidth*.42);
-    var progress=Math.max(-1,Math.min(1,distance/slot));
-    if((selectedBooster===0&&progress>0)||(selectedBooster===boosterCards.length-1&&progress<0))progress*=.22;
-    renderBoosters(progress);
+    var p=boosterPointer;if(!p||p.id!==e.pointerId)return;
+    var dx=e.clientX-p.x,dy=e.clientY-p.y;
+    if(!p.dragged){
+      if(Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)){boosterPointer=null;settleBooster(Math.round(boosterPhase));return;}
+      if(Math.abs(dx)<8)return;
+      p.dragged=true;boosterSuppressClick=true;
+      boosterCarousel.setPointerCapture(e.pointerId);
+      boosterCarousel.classList.add('is-dragging');
+    }
+    boosterPhase=p.phase-dx/Math.max(90,boosterCarousel.clientWidth*.32);
+    paintBoosters();
   });
-  boosterCarousel.addEventListener('pointerup',function(e){
-    if(boosterStartX===null)return;
-    var distance=e.clientX-boosterStartX;
-    boosterStartX=null;
-    boosterCarousel.classList.remove('is-dragging');
-    if(Math.abs(distance)>36)turnBooster(distance<0?1:-1);else paintBoosters();
-    setTimeout(function(){boosterDragged=false;},0);
-  });
-  boosterCarousel.addEventListener('pointercancel',function(){boosterStartX=null;boosterDragged=false;boosterCarousel.classList.remove('is-dragging');paintBoosters();});
+  function endBooster(e){
+    var p=boosterPointer;if(!p||p.id!==e.pointerId)return;
+    boosterPointer=null;boosterCarousel.classList.remove('is-dragging');
+    if(boosterCarousel.hasPointerCapture(e.pointerId))boosterCarousel.releasePointerCapture(e.pointerId);
+    settleBooster(Math.round(boosterPhase));
+  }
+  boosterCarousel.addEventListener('pointerup',endBooster);
+  boosterCarousel.addEventListener('pointercancel',endBooster);
+  boosterCarousel.addEventListener('lostpointercapture',endBooster);
   boosterCarousel.addEventListener('keydown',function(e){
     if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight')return;
-    e.preventDefault();turnBooster(e.key==='ArrowRight'?1:-1);
+    e.preventDefault();settleBooster(Math.round(boosterPhase)+(e.key==='ArrowRight'?1:-1));
   });
-  boosterCards.forEach(function(card,index){card.addEventListener('click',function(e){
-    if(boosterDragged){e.preventDefault();return;}
-    var offset=boosterOffset(index);
-    if(offset!==0)turnBooster(offset);
-  });});
-  document.getElementById('openSelectedPath').addEventListener('click',function(){go(boosterPaths[selectedBooster]);});
+  boosterCards.forEach(function(card,index){
+    var reflection=document.createElement('span');reflection.className='booster-reflection';reflection.setAttribute('aria-hidden','true');
+    var reflectedImage=card.querySelector('img').cloneNode();reflectedImage.alt='';reflectedImage.draggable=false;
+    reflection.appendChild(reflectedImage);card.appendChild(reflection);
+    card.querySelector('img').draggable=false;
+    card.addEventListener('click',function(e){
+      if(boosterSuppressClick&&e.detail!==0){e.preventDefault();return;}
+      go(boosterPaths[index]);
+    });
+  });
   paintBoosters();
 
   /* ---- Painters ----------------------------------------------------- */
@@ -1517,14 +1527,11 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
 
   function paintStage(key) {
     var s = STAGES[key];
-    shutDrawer();
     var stage = document.getElementById("v-stage");
     stage.dataset.stage = key;
     stage.classList.add("is-editorial-look");
     document.getElementById("stageName").textContent = s.name;
     document.getElementById("stageAsk").textContent  = s.ask;
-    paras(document.getElementById("stageLook"), s.look);
-    document.getElementById("stagePull").textContent = s.pull;
     paintDeck(key);
 
     var next = document.getElementById("stageNext");
@@ -1641,6 +1648,7 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
     host.style.setProperty('--saver-card-left',bounds.left.toFixed(1)+'px');
   }
   function cardImage(card){
+    if(card.image)return card.image;
     var folder=card.folder||'nudge-cards';
     var number=card.number||((card.source||0)+3);
     if(folder==='nudge-cards'){
@@ -1715,15 +1723,21 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
   var activeDeck = [];
   var pos = 0, target = 0, picked = 0, spinning = null;
 
+  function openGlanceCard() {
+    var item=activeDeck[picked];
+    if(item.destination)go(item.destination);
+    else go('saver',{card:item});
+  }
+
   function paintDeck(key) {
     activeDeck=buildStageDeck(key);
     cards.forEach(function(c){c.remove();});
     cards=[];pos=0;target=0;picked=0;
     activeDeck.forEach(function (item) {
       var c = document.createElement("article");
-      c.className = "ncard"+(item.invert?" is-inverted":"");
+      c.className = "ncard"+(item.invert?" is-inverted":"")+(item.destination==='lookmore'?" is-look-more":"");
       c.setAttribute("role", "option");
-      c.setAttribute("aria-label",item.card.h.replace(/\n/g,' '));
+      c.setAttribute("aria-label",item.card.h.replace(/\n/g,' ')+(item.destination?' — '+item.card.w:''));
       c.innerHTML='<img src="'+cardImage(item)+'" alt="">';
       flow.appendChild(c);
       cards.push(c);
@@ -1740,10 +1754,13 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
       var ax = Math.min(a, 3);
       /* the first neighbour steps out furthest, then the fan tightens */
       var x  = sgn * W * (0.30 * ax + 0.25 * Math.min(ax, 1));
-      var z  = -ax * 92;
+      var emphasis=Math.max(0,1-a);
+      var lookMore=activeDeck[i].destination==='lookmore';
+      var lift=emphasis*(lookMore?7:4);
+      var z  = -ax * 92 + emphasis*(lookMore?32:20);
       var ry = -sgn * ax * 27;
-      var sc = 1 - ax * 0.07;
-      c.style.transform = "translate(-50%,-50%) translateX(" + x.toFixed(1) + "px) translateZ(" +
+      var sc = (1 - ax * 0.07)*(1 - .05*Math.min(a,1)) + emphasis*(lookMore?.04:.02);
+      c.style.transform = "translate(-50%,-50%) translateX(" + x.toFixed(1) + "px) translateY(-"+lift.toFixed(2)+"px) translateZ(" +
                           z.toFixed(1) + "px) rotateY(" + ry.toFixed(2) + "deg) scale(" + sc.toFixed(3) + ")";
       c.style.opacity = a < 1 ? 1 : Math.max(0.12, 1 - (a - 1) * 0.42);
       c.style.zIndex = String(200 - Math.round(a * 10));
@@ -1754,10 +1771,14 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
   function mark() {
     var k = Math.round(pos);
     if (k !== picked) picked = k;
-    cards.forEach(function(c,i){c.setAttribute('aria-selected',i===picked?'true':'false');});
+    cards.forEach(function(c,i){c.setAttribute('aria-selected',i===picked?'true':'false');c.classList.toggle('is-centered',i===picked);});
   }
 
   function spin() {
+    if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      if(spinning)cancelAnimationFrame(spinning);
+      spinning=null;pos=target;place();mark();return;
+    }
     if (spinning) return;
     (function step() {
       pos += (target - pos) * 0.18;
@@ -1792,7 +1813,7 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
     pressedCard = null;
     if (tappedCard) {
       var k = cards.indexOf(tappedCard);
-      if (k === picked) go("saver", { card: activeDeck[picked] });
+      if (k === picked) openGlanceCard();
       else { target = k; spin(); }
     } else {
       target = Math.max(0, Math.min(activeDeck.length - 1, Math.round(pos)));
@@ -1806,7 +1827,7 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
   flow.addEventListener("keydown", function (e) {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      go("saver", { card: activeDeck[picked] });
+      openGlanceCard();
       return;
     }
     var step = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
@@ -1820,10 +1841,9 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
 
   /* ---- Global handlers ---------------------------------------------- */
   document.addEventListener("click", function (e) {
-    var t = e.target.closest("[data-go],[data-look],[data-back],[data-menu],[data-close]");
+    var t = e.target.closest("[data-go],[data-back],[data-menu],[data-close]");
     if (!t) return;
-    if (t.hasAttribute("data-look")) { drawer.classList.contains('open') ? go('lookmore') : openLook(); }
-    else if (t.hasAttribute("data-go"))   { go(t.getAttribute("data-go")); }
+    if (t.hasAttribute("data-go"))   { go(t.getAttribute("data-go")); }
     else if (t.hasAttribute("data-back")) { back(); }
     else if (t.hasAttribute("data-menu")) { document.getElementById("menu").classList.add("on"); }
     else { document.getElementById("menu").classList.remove("on"); }
@@ -1838,13 +1858,6 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
     }else{document.getElementById('downloadWallpaper').click();}
   });
 
-  /* ---- The Look opens only when asked for --------------------------- */
-  var discloseBtn = document.getElementById("discloseBtn");
-  var drawer = document.getElementById("lookDrawer");
-  function shutDrawer() {document.getElementById('v-stage').classList.remove('is-look-open');drawer.classList.remove('open');discloseBtn.setAttribute('aria-expanded','false');discloseBtn.classList.remove('active');document.getElementById('glanceTab').classList.add('active');document.getElementById('glanceTab').setAttribute('aria-pressed','true');document.getElementById('glanceExperience').hidden=false;}
-  function openLook() {document.getElementById('v-stage').classList.add('is-look-open');drawer.classList.add('open');discloseBtn.setAttribute('aria-expanded','true');discloseBtn.classList.add('active');document.getElementById('glanceTab').classList.remove('active');document.getElementById('glanceTab').setAttribute('aria-pressed','false');document.getElementById('glanceExperience').hidden=true;window.scrollTo({top:0,behavior:'smooth'});}
-  discloseBtn.addEventListener('click',openLook);
-  document.getElementById('glanceTab').addEventListener('click',shutDrawer);
   document.getElementById("saverClose").addEventListener("click", back);
 
   /* ---- Gate ---------------------------------------------------------- */
@@ -2595,178 +2608,6 @@ if ("serviceWorker" in navigator) {
   #v-mirror21 .mirror21-lead{font-size:14px;line-height:1.3}
 }
 
-/* Home is a single-screen path chooser built around the three boosters. */
-#v-home{
-  background:#fff;
-  color:#151515;
-}
-:root[data-theme="dark"] #v-home{
-  background:#090909;
-  color:#f5f5f2;
-}
-#v-home.on{
-  height:100dvh;
-  min-height:0;
-  overflow:hidden;
-  padding-bottom:calc(94px + env(safe-area-inset-bottom,0px));
-}
-#v-home .bar{
-  height:calc(68px + env(safe-area-inset-top,0px));
-  min-height:calc(68px + env(safe-area-inset-top,0px));
-  padding:calc(12px + env(safe-area-inset-top,0px)) 24px 10px;
-  background:#fff;
-}
-#v-home .bar::before{
-  color:#151515;
-}
-#v-home .home-paths{
-  height:calc(100dvh - 162px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
-  min-height:0;
-  padding:4px 0 12px;
-  display:grid;
-  grid-template-rows:auto minmax(0,1fr) auto;
-  gap:10px;
-  background:#fff;
-}
-#v-home .home-path-copy{
-  padding:0 20px;
-  text-align:center;
-}
-#v-home .home-path-copy p,
-#v-home .home-path-copy span{
-  display:block;
-  margin:0;
-  color:#808080;
-  font:500 10px/1.25 Arial,Helvetica,sans-serif;
-  letter-spacing:.28em;
-}
-#v-home .home-path-copy h1{
-  margin:9px 0 8px;
-  color:#151515;
-  font:italic 700 28px/1 Arial,Helvetica,sans-serif;
-  letter-spacing:0;
-  text-indent:0;
-  white-space:nowrap;
-}
-#v-home .booster-carousel{
-  position:relative;
-  min-height:0;
-  margin:0;
-  overflow:hidden;
-  perspective:900px;
-  touch-action:pan-y;
-  user-select:none;
-  -webkit-user-select:none;
-  outline:none;
-}
-#v-home .booster-card{
-  position:absolute;
-  z-index:1;
-  top:50%;
-  left:50%;
-  height:84%;
-  max-height:372px;
-  aspect-ratio:2/3;
-  padding:0;
-  border:0;
-  background:transparent;
-  opacity:var(--booster-opacity,.5);
-  transform:translate(-50%,-50%)
-    translateX(var(--booster-x,0%))
-    translateY(var(--booster-y,0%))
-    rotateY(var(--booster-rotation,0deg))
-    scale(var(--booster-scale,.76));
-  transform-style:preserve-3d;
-  transition:transform 400ms cubic-bezier(.22,.75,.22,1),opacity 400ms ease;
-  will-change:transform,opacity;
-  -webkit-tap-highlight-color:transparent;
-}
-#v-home .booster-card img{
-  display:block;
-  width:100%;
-  height:100%;
-  object-fit:contain;
-  pointer-events:none;
-}
-#v-home .booster-card:focus-visible{
-  outline:2px solid #c99c32;
-  outline-offset:4px;
-}
-#v-home .booster-carousel.is-dragging .booster-card{
-  transition:none;
-}
-#v-home .home-path-open{
-  position:relative;
-  width:min(360px,calc(100% - 48px));
-  height:56px;
-  min-height:56px;
-  margin:0 auto;
-  padding:0 48px 0 24px;
-  border:0;
-  border-radius:28px;
-  background:#111;
-  color:#fff;
-  font:700 10px/1 Arial,Helvetica,sans-serif;
-  letter-spacing:.18em;
-}
-#v-home .home-path-open b{
-  position:absolute;
-  right:20px;
-  top:50%;
-  transform:translateY(-54%);
-  font:400 28px/1 Arial,Helvetica,sans-serif;
-  letter-spacing:0;
-}
-#v-home.on~#bottomNav{
-  background:#fff;
-  border-top-color:#e4e4e4;
-}
-#v-home.on~#bottomNav button{
-  color:#707070;
-}
-#v-home.on~#bottomNav button.active{
-  color:#c99c32;
-}
-:root[data-theme="dark"] #v-home .bar,
-:root[data-theme="dark"] #v-home .home-paths{
-  background:#090909;
-}
-:root[data-theme="dark"] #v-home .bar::before,
-:root[data-theme="dark"] #v-home .home-path-copy h1{
-  color:#f5f5f2;
-}
-:root[data-theme="dark"] #v-home .home-path-copy p,
-:root[data-theme="dark"] #v-home .home-path-copy span{
-  color:#b8b8b8;
-}
-:root[data-theme="dark"] #v-home .home-path-open{
-  background:#f5f5f2;
-  color:#111;
-}
-:root[data-theme="dark"] #v-home.on~#bottomNav{
-  background:#090909;
-  border-top-color:#303030;
-}
-:root[data-theme="dark"] #v-home.on~#bottomNav button{
-  color:#aaa;
-}
-:root[data-theme="dark"] #v-home.on~#bottomNav button.active{
-  color:#c99c32;
-}
-#v-index .ep-unlock{
-  position:relative;
-  height:56px;
-  min-height:56px;
-  padding:0 48px 0 24px;
-  gap:0;
-  border-radius:28px;
-}
-#v-index .ep-unlock b{
-  position:absolute;
-  right:20px;
-  top:50%;
-  transform:translateY(-54%);
-}
 
 /* Brand typography: Magistral display with Neue Haas body copy. */
 :root{
@@ -3290,6 +3131,122 @@ body .menu-item{
 #v-mirror21.on~.appearance-toggle .appearance-sun{display:none}
 #v-mirror21.on~.appearance-toggle .appearance-moon{display:block}
 
+</style>
+
+<!-- Keep the home styles inline, like the rest of this standalone page.
+     File previews and static hosts must not depend on a /src CSS request. -->
+<style id="pocket-home-styles">
+/* Home composition. Artwork remains unmodified; all depth is applied to its square tile. */
+#v-home.pocket-home, :root[data-theme="dark"] #v-home.pocket-home { --home-bg:#080808; --home-ink:#f8f8f6; --home-muted:#aaa; background:var(--home-bg); color:var(--home-ink); max-width:none; width:100%; box-shadow:none; }
+:root[data-theme="light"] #v-home.pocket-home { --home-bg:#f8f7f4; --home-ink:#171717; --home-muted:#666; }
+#v-home.pocket-home.on { min-height:100dvh; height:auto; padding:0 0 env(safe-area-inset-bottom,0px); overflow:clip; }
+#v-home.pocket-home .bar { width:100%; max-width:1440px; height:clamp(80px,10dvh,130px); min-height:80px; padding:calc(clamp(20px,3.2vw,48px) + env(safe-area-inset-top,0px)) clamp(22px,5.5vw,80px) 0; align-items:flex-start; background:transparent; }
+#v-home.pocket-home .bar::before { content:'THE POCKET\A MIRROR'; white-space:pre; max-width:none; color:var(--home-ink); font:italic 700 clamp(13px,2.7vw,28px)/1.4 'Magistral',Arial,sans-serif; letter-spacing:.32em; }
+#v-home.pocket-home .bar > span, #v-home.pocket-home .bar .burger { display:none; }
+#v-home.pocket-home .home-paths { width:100%; max-width:1120px; min-height:calc(100dvh - clamp(80px,10dvh,130px)); height:auto; margin:0 auto; padding:0 0 clamp(28px,7dvh,100px); display:flex; flex-direction:column; align-items:center; gap:0; background:transparent; }
+#v-home.pocket-home .home-path-copy { text-align:center; width:100%; padding:clamp(20px,5.4dvh,84px) 12px 0; }
+#v-home.pocket-home .home-path-copy p { margin:0; font:500 clamp(9px,2.3vw,22px)/1.4 Arial,sans-serif; letter-spacing:.28em; color:var(--home-muted); }
+#v-home.pocket-home .home-path-copy h1 { font:italic 700 clamp(25px,6.6vw,68px)/1.1 'Magistral',Arial,sans-serif; letter-spacing:-.035em; margin:clamp(10px,1.6dvh,25px) 0 0; color:var(--home-ink); white-space:nowrap; }
+#v-home.pocket-home .booster-carousel { position:relative; flex:none; width:min(100%,1000px); aspect-ratio:1.75; margin:clamp(36px,10dvh,150px) 0 0; overflow:visible; perspective:1800px; touch-action:pan-y; user-select:none; -webkit-user-select:none; cursor:grab; }
+#v-home.pocket-home .booster-carousel.is-dragging { cursor:grabbing; }
+#v-home.pocket-home .booster-card { position:absolute; top:50%; left:50%; width:50%; height:auto; max-height:none; aspect-ratio:1; border:0; padding:0; background:transparent; opacity:1; transform:translate(-50%,-50%) translateX(var(--booster-x,0%)) translateY(var(--booster-y,0%)) rotateY(var(--booster-rotation,0deg)) scale(var(--booster-scale,1)); transform-origin:center; transition:none; will-change:transform; -webkit-tap-highlight-color:transparent; cursor:inherit; }
+#v-home.pocket-home .booster-card > img { display:block; width:100%; height:100%; object-fit:contain; pointer-events:none; }
+/* Highlight follows the artwork's alpha edge, without altering its frame or lettering.
+   Lift only the image so carousel positioning, contact shadow, and reflection stay grounded. */
+#v-home.pocket-home .booster-card > img {
+  translate:0 var(--mirror-lift,0px);
+  filter:drop-shadow(0 0 1px transparent) drop-shadow(0 0 5px transparent);
+  transition:translate 220ms ease,filter 220ms ease;
+}
+#v-home.pocket-home .booster-card.is-active { --mirror-lift:-3px; cursor:pointer; }
+#v-home.pocket-home .booster-card.is-active > img {
+  filter:drop-shadow(0 0 1.5px rgba(240,245,255,.68)) drop-shadow(0 0 7px rgba(225,235,250,.22));
+}
+#v-home.pocket-home .booster-card.is-active:focus-visible { --mirror-lift:-7px; }
+#v-home.pocket-home .booster-card.is-active:focus-visible > img {
+  filter:drop-shadow(0 0 2px rgba(248,250,255,.8)) drop-shadow(0 0 9px rgba(230,240,255,.3));
+}
+@media (hover:hover) and (pointer:fine) {
+  #v-home.pocket-home .booster-card.is-active:hover { --mirror-lift:-7px; }
+  #v-home.pocket-home .booster-card.is-active:hover > img {
+    filter:drop-shadow(0 0 2px rgba(248,250,255,.8)) drop-shadow(0 0 9px rgba(230,240,255,.3));
+  }
+}
+@media (prefers-reduced-motion:reduce) {
+  #v-home.pocket-home .booster-card > img { translate:none; transition:none; }
+}
+/* A brief, softer catch of light follows the image edge without adding a frame. */
+#v-home.pocket-home .booster-card.is-active:focus-visible > img { animation:mirror-soft-glint 850ms ease-out; }
+@media (hover:hover) and (pointer:fine) {
+  #v-home.pocket-home .booster-card.is-active:hover > img { animation:mirror-soft-glint 850ms ease-out; }
+}
+@keyframes mirror-soft-glint {
+  0%,100% { filter:drop-shadow(0 0 2px rgba(248,250,255,.8)) drop-shadow(0 0 9px rgba(230,240,255,.3)); }
+  35% { filter:drop-shadow(0 0 2px rgba(255,255,255,.95)) drop-shadow(0 0 10px rgba(235,244,255,.38)); }
+}
+@media (prefers-reduced-motion:reduce) {
+  #v-home.pocket-home .booster-card.is-active:is(:hover,:focus-visible) > img { animation:none; }
+}
+#v-home.pocket-home .booster-card::before { content:''; position:absolute; top:88%; left:12%; width:76%; height:5%; border-radius:50%; background:#000; opacity:.6; filter:blur(9px); z-index:-1; pointer-events:none; }
+#v-home.pocket-home .booster-reflection { position:absolute; top:80%; left:0; width:100%; height:100%; opacity:.13; filter:blur(2px); mask-image:linear-gradient(to bottom,#000 0%,transparent 31%); -webkit-mask-image:linear-gradient(to bottom,#000 0%,transparent 31%); pointer-events:none; }
+#v-home.pocket-home .booster-reflection img { display:block; width:100%; height:100%; object-fit:contain; transform:scaleY(-1); }
+#v-home.pocket-home .booster-card:focus-visible, #v-home.pocket-home .booster-carousel:focus-visible { outline:2px solid #c99c32; outline-offset:-12px; border-radius:12px; }
+#v-home.pocket-home .home-path-question { margin:clamp(16px,3.5dvh,54px) 12px 0; text-align:center; color:var(--home-muted); font:italic 400 clamp(17px,3.2vw,32px)/1.4 'Magistral',Arial,sans-serif; letter-spacing:.15em; }
+#v-home.pocket-home .home-path-hint { margin:clamp(38px,9dvh,140px) 16px 0; text-align:center; font:italic 400 clamp(10px,1.8vw,18px)/1.7 Arial,sans-serif; letter-spacing:.24em; color:var(--home-muted); }
+#v-home.pocket-home.on ~ #bottomNav, #v-home.pocket-home.on ~ .settings-open { display:none!important; }
+#v-home.pocket-home.on ~ .appearance-toggle { top:calc(clamp(20px,3.2vw,48px) + env(safe-area-inset-top,0px)); right:max(clamp(22px,5.5vw,80px),calc((100vw - 1440px)/2 + 80px)); width:clamp(40px,6.8vw,70px); height:clamp(40px,6.8vw,70px); padding:clamp(9px,1.6vw,17px); background:transparent; border-color:#7776; color:var(--ink); }
+@media (min-width:1100px) and (max-height:950px) { #v-home.pocket-home .home-path-copy { padding-top:16px; } #v-home.pocket-home .booster-carousel { width:min(88%,calc((100dvh - 290px)*1.75)); margin-top:28px; } #v-home.pocket-home .home-path-question { margin-top:12px; } #v-home.pocket-home .home-path-hint { margin-top:28px; } #v-home.pocket-home .home-paths { padding-bottom:24px; } }
+@media (max-width:600px) { #v-home.pocket-home .home-path-copy { padding-top:clamp(28px,6dvh,60px); } #v-home.pocket-home .booster-carousel { margin-top:clamp(55px,12dvh,110px); } #v-home.pocket-home .home-path-question { margin-top:28px; } #v-home.pocket-home .home-path-hint { margin-top:clamp(48px,10dvh,90px); font-size:10px; letter-spacing:.16em; } }
+@media (prefers-reduced-motion:reduce) { #v-home.pocket-home .booster-card { will-change:auto; } }
+</style>
+
+<style id="reflection-path-styles">
+/* Reflection screens contain only their question and five cards. */
+#v-stage.reflection-path.on { height:auto; min-height:100dvh; padding-bottom:calc(var(--stage-nav-space,0px) + env(safe-area-inset-bottom,0px)); overflow:clip; }
+#v-stage.reflection-path > .bar { height:calc(80px + env(safe-area-inset-top,0px)); min-height:80px; padding-top:calc(18px + env(safe-area-inset-top,0px)); }
+#v-stage.reflection-path > .page { display:flex; flex-direction:column; height:calc(100dvh - 80px - var(--stage-nav-space,0px) - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)); min-height:390px; padding:16px 24px 24px; }
+#v-stage.reflection-path #stageAsk { flex:none; margin:12px 0 4px; text-align:center; color:var(--ink); }
+#v-stage.reflection-path #glanceExperience { display:flex; flex:1; min-height:320px; }
+#v-stage.reflection-path #glanceExperience .flow { flex:1; height:auto; min-height:320px; margin:0 -24px; overflow:hidden; }
+#v-stage.reflection-path .flow::after, #v-stage.reflection-path .flow-glow { display:none; }
+#v-stage.reflection-path #glanceExperience .ncard { top:50%; width:clamp(150px,min(58vw,calc((100dvh - 170px - var(--stage-nav-space,0px))*.64)),260px); }
+#v-stage.reflection-path .ncard > img { border-radius:inherit; object-fit:contain; filter:drop-shadow(0 0 1px transparent) drop-shadow(0 0 8px transparent); transition:filter 240ms ease; }
+#v-stage.reflection-path .ncard.is-centered > img { filter:drop-shadow(0 0 1.5px rgba(240,246,255,.75)) drop-shadow(0 0 8px rgba(220,233,255,.28)); }
+#v-stage.reflection-path .ncard.is-centered.is-look-more > img { filter:drop-shadow(0 0 2px rgba(255,244,200,.95)) drop-shadow(0 0 12px rgba(239,210,130,.48)); }
+@media (hover:hover) and (pointer:fine) {
+  #v-stage.reflection-path .ncard.is-centered:hover > img { filter:drop-shadow(0 0 2px rgba(250,252,255,.95)) drop-shadow(0 0 10px rgba(220,233,255,.42)); }
+  #v-stage.reflection-path .ncard.is-centered.is-look-more:hover > img { filter:drop-shadow(0 0 3px rgba(255,248,220,1)) drop-shadow(0 0 15px rgba(239,210,130,.6)); }
+}
+@media (prefers-reduced-motion:reduce) {
+  #v-stage.reflection-path .ncard, #v-stage.reflection-path .ncard > img { transition:none; }
+}
+
+/* Let the highlight extend past the image instead of clipping it at the card boundary. */
+#v-stage.reflection-path .ncard { overflow:visible; background:transparent; }
+@property --reflection-glint-angle { syntax:'<angle>'; inherits:false; initial-value:0deg; }
+#v-stage.reflection-path .ncard::after {
+  content:'';
+  position:absolute;
+  inset:-1px;
+  border-radius:inherit;
+  padding:2px;
+  --reflection-glint-color:rgba(240,248,255,.98);
+  background:conic-gradient(from var(--reflection-glint-angle),rgba(225,237,255,.15) 0deg,rgba(225,237,255,.15) 45deg,var(--reflection-glint-color) 65deg,rgba(225,237,255,.15) 88deg,rgba(225,237,255,.15) 225deg,var(--reflection-glint-color) 245deg,rgba(225,237,255,.15) 268deg);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;
+  mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  mask-composite:exclude;
+  opacity:0;
+  transition:opacity 240ms ease;
+  pointer-events:none;
+}
+#v-stage.reflection-path .ncard.is-centered::after { opacity:1; animation:reflection-edge-glance 5s linear infinite; }
+#v-stage.reflection-path .ncard.is-centered.is-look-more::after { --reflection-glint-color:#fff4c6; padding:3px; animation-duration:3.8s; }
+@keyframes reflection-edge-glance { to { --reflection-glint-angle:360deg; } }
+@media (prefers-reduced-motion:reduce) {
+  #v-stage.reflection-path .ncard::after { transition:none; }
+  #v-stage.reflection-path .ncard.is-centered::after { animation:none; }
+}
 </style>
 
 <script type="module" src="/src/main.js"></script>
