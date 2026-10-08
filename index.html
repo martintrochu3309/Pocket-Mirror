@@ -1489,9 +1489,10 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
       if(Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)){boosterPointer=null;settleBooster(Math.round(boosterPhase));return;}
       if(Math.abs(dx)<8)return;
       p.dragged=true;boosterSuppressClick=true;
-      boosterCarousel.setPointerCapture(e.pointerId);
+      try{boosterCarousel.setPointerCapture(e.pointerId);}catch(err){}
       boosterCarousel.classList.add('is-dragging');
     }
+    if(e.cancelable)e.preventDefault();
     boosterPhase=p.phase-dx/Math.max(90,boosterCarousel.clientWidth*.32);
     paintBoosters();
   });
@@ -1503,7 +1504,11 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
   }
   boosterCarousel.addEventListener('pointerup',endBooster);
   boosterCarousel.addEventListener('pointercancel',endBooster);
-  boosterCarousel.addEventListener('lostpointercapture',endBooster);
+  boosterCarousel.addEventListener('lostpointercapture',function(e){
+    // Touch implicitly captures the button first. Its bubbling capture-loss event
+    // belongs to that button, not to the carousel taking over the swipe.
+    if(e.target===boosterCarousel)endBooster(e);
+  });
   boosterCarousel.addEventListener('keydown',function(e){
     if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight')return;
     e.preventDefault();settleBooster(Math.round(boosterPhase)+(e.key==='ArrowRight'?1:-1));
@@ -3191,12 +3196,12 @@ body .menu-item{
 #v-home.pocket-home .booster-reflection { position:absolute; top:80%; left:0; width:100%; height:100%; opacity:.13; filter:blur(2px); mask-image:linear-gradient(to bottom,#000 0%,transparent 31%); -webkit-mask-image:linear-gradient(to bottom,#000 0%,transparent 31%); pointer-events:none; }
 #v-home.pocket-home .booster-reflection img { display:block; width:100%; height:100%; object-fit:contain; transform:scaleY(-1); }
 #v-home.pocket-home .booster-card:focus-visible, #v-home.pocket-home .booster-carousel:focus-visible { outline:2px solid #c99c32; outline-offset:-12px; border-radius:12px; }
-#v-home.pocket-home .home-path-question { margin:clamp(16px,3.5dvh,54px) 12px 0; text-align:center; color:var(--home-muted); font:italic 400 clamp(17px,3.2vw,32px)/1.4 'Magistral',Arial,sans-serif; letter-spacing:.15em; }
+#v-home.pocket-home .home-path-question { margin:calc(clamp(16px,3.5dvh,54px) + 16px) 12px 0; text-align:center; color:var(--home-muted); font:italic 400 clamp(17px,3.2vw,32px)/1.4 'Magistral',Arial,sans-serif; letter-spacing:.15em; }
 #v-home.pocket-home .home-path-hint { margin:clamp(38px,9dvh,140px) 16px 0; text-align:center; font:italic 400 clamp(10px,1.8vw,18px)/1.7 Arial,sans-serif; letter-spacing:.24em; color:var(--home-muted); }
 #v-home.pocket-home.on ~ #bottomNav, #v-home.pocket-home.on ~ .settings-open { display:none!important; }
 #v-home.pocket-home.on ~ .appearance-toggle { top:calc(clamp(20px,3.2vw,48px) + env(safe-area-inset-top,0px)); right:max(clamp(22px,5.5vw,80px),calc((100vw - 1440px)/2 + 80px)); width:clamp(40px,6.8vw,70px); height:clamp(40px,6.8vw,70px); padding:clamp(9px,1.6vw,17px); background:transparent; border-color:#7776; color:var(--ink); }
-@media (min-width:1100px) and (max-height:950px) { #v-home.pocket-home .home-path-copy { padding-top:16px; } #v-home.pocket-home .booster-carousel { width:min(88%,calc((100dvh - 290px)*1.75)); margin-top:28px; } #v-home.pocket-home .home-path-question { margin-top:12px; } #v-home.pocket-home .home-path-hint { margin-top:28px; } #v-home.pocket-home .home-paths { padding-bottom:24px; } }
-@media (max-width:600px) { #v-home.pocket-home .home-path-copy { padding-top:clamp(28px,6dvh,60px); } #v-home.pocket-home .booster-carousel { margin-top:clamp(55px,12dvh,110px); } #v-home.pocket-home .home-path-question { margin-top:28px; } #v-home.pocket-home .home-path-hint { margin-top:clamp(48px,10dvh,90px); font-size:10px; letter-spacing:.16em; } }
+@media (min-width:1100px) and (max-height:950px) { #v-home.pocket-home .home-path-copy { padding-top:16px; } #v-home.pocket-home .booster-carousel { width:min(88%,calc((100dvh - 290px)*1.75)); margin-top:28px; } #v-home.pocket-home .home-path-question { margin-top:28px; } #v-home.pocket-home .home-path-hint { margin-top:28px; } #v-home.pocket-home .home-paths { padding-bottom:24px; } }
+@media (max-width:600px) { #v-home.pocket-home .home-path-copy { padding-top:clamp(28px,6dvh,60px); } #v-home.pocket-home .booster-carousel { margin-top:clamp(55px,12dvh,110px); } #v-home.pocket-home .home-path-question { margin-top:44px; } #v-home.pocket-home .home-path-hint { margin-top:clamp(48px,10dvh,90px); font-size:10px; letter-spacing:.16em; } }
 @media (prefers-reduced-motion:reduce) { #v-home.pocket-home .booster-card { will-change:auto; } }
 </style>
 
@@ -3211,12 +3216,9 @@ body .menu-item{
 #v-stage.reflection-path .flow::after, #v-stage.reflection-path .flow-glow { display:none; }
 #v-stage.reflection-path #glanceExperience .ncard { top:50%; width:clamp(150px,min(58vw,calc((100dvh - 170px - var(--stage-nav-space,0px))*.64)),260px); }
 #v-stage.reflection-path .ncard > img { border-radius:inherit; object-fit:contain; filter:drop-shadow(0 0 1px transparent) drop-shadow(0 0 8px transparent); transition:filter 240ms ease; }
-#v-stage.reflection-path .ncard.is-centered > img { filter:drop-shadow(0 0 1.5px rgba(240,246,255,.75)) drop-shadow(0 0 8px rgba(220,233,255,.28)); }
-#v-stage.reflection-path .ncard.is-centered.is-look-more > img { filter:drop-shadow(0 0 2px rgba(255,244,200,.95)) drop-shadow(0 0 12px rgba(239,210,130,.48)); }
-@media (hover:hover) and (pointer:fine) {
-  #v-stage.reflection-path .ncard.is-centered:hover > img { filter:drop-shadow(0 0 2px rgba(250,252,255,.95)) drop-shadow(0 0 10px rgba(220,233,255,.42)); }
-  #v-stage.reflection-path .ncard.is-centered.is-look-more:hover > img { filter:drop-shadow(0 0 3px rgba(255,248,220,1)) drop-shadow(0 0 15px rgba(239,210,130,.6)); }
-}
+#v-stage.reflection-path .ncard.is-centered > img { filter:drop-shadow(0 0 1px rgba(240,246,255,.35)) drop-shadow(0 0 5px rgba(220,233,255,.12)); animation:reflection-highlight-arrival 1100ms ease-in-out; }
+#v-stage.reflection-path .ncard.is-centered.is-look-more > img { filter:drop-shadow(0 0 1px rgba(255,244,200,.5)) drop-shadow(0 0 7px rgba(239,210,130,.2)); animation:reflection-lookmore-arrival 1250ms ease-in-out; }
+/* Center selection activates the full highlight on touch, mouse, and keyboard alike. */
 @media (prefers-reduced-motion:reduce) {
   #v-stage.reflection-path .ncard, #v-stage.reflection-path .ncard > img { transition:none; }
 }
@@ -3240,12 +3242,42 @@ body .menu-item{
   transition:opacity 240ms ease;
   pointer-events:none;
 }
-#v-stage.reflection-path .ncard.is-centered::after { opacity:1; animation:reflection-edge-glance 5s linear infinite; }
-#v-stage.reflection-path .ncard.is-centered.is-look-more::after { --reflection-glint-color:#fff4c6; padding:3px; animation-duration:3.8s; }
-@keyframes reflection-edge-glance { to { --reflection-glint-angle:360deg; } }
+#v-stage.reflection-path .ncard.is-centered::after { opacity:.3; animation:reflection-edge-arrival 1100ms ease-in-out; }
+#v-stage.reflection-path .ncard.is-centered.is-look-more::after { --reflection-glint-color:#fff4c6; padding:3px; animation-duration:1250ms; }
+@keyframes reflection-edge-arrival {
+  0% { --reflection-glint-angle:0deg; filter:brightness(1); opacity:.3; }
+  38% { --reflection-glint-angle:140deg; filter:brightness(1.65) drop-shadow(0 0 3px rgba(240,248,255,.5)); opacity:1; }
+  100% { --reflection-glint-angle:360deg; filter:brightness(1); opacity:.3; }
+}
 @media (prefers-reduced-motion:reduce) {
   #v-stage.reflection-path .ncard::after { transition:none; }
   #v-stage.reflection-path .ncard.is-centered::after { animation:none; }
+}
+
+/* White Awareness artwork needs a firmer contrast edge for its moving glint. */
+#v-stage.reflection-path[data-stage="awareness"] .ncard.is-centered:not(.is-look-more) {
+  box-shadow:0 0 0 1px rgba(85,110,145,.45),0 0 0 2px rgba(245,250,255,.35),0 0 8px rgba(215,235,255,.18),0 26px 48px rgba(0,0,0,.72);
+}
+#v-stage.reflection-path[data-stage="awareness"] .ncard.is-centered:not(.is-look-more) > img {
+  filter:drop-shadow(0 0 1px rgba(255,255,255,.4)) drop-shadow(0 0 6px rgba(215,235,255,.16));
+}
+#v-stage.reflection-path[data-stage="awareness"] .ncard.is-centered:not(.is-look-more)::after {
+  padding:3px;
+  background:conic-gradient(from var(--reflection-glint-angle),rgba(160,190,225,.7) 0deg,rgba(160,190,225,.7) 40deg,#fff 65deg,rgba(160,190,225,.7) 95deg,rgba(160,190,225,.7) 220deg,#fff 245deg,rgba(160,190,225,.7) 275deg);
+}
+
+
+@keyframes reflection-highlight-arrival {
+  0%,100% { filter:drop-shadow(0 0 1px rgba(240,246,255,.35)) drop-shadow(0 0 5px rgba(220,233,255,.12)); }
+  35% { filter:drop-shadow(0 0 2px rgba(250,252,255,.95)) drop-shadow(0 0 10px rgba(220,233,255,.42)); }
+}
+@keyframes reflection-lookmore-arrival {
+  0%,100% { filter:drop-shadow(0 0 1px rgba(255,244,200,.5)) drop-shadow(0 0 7px rgba(239,210,130,.2)); }
+  35% { filter:drop-shadow(0 0 3px rgba(255,248,220,1)) drop-shadow(0 0 15px rgba(239,210,130,.6)); }
+}
+@media (prefers-reduced-motion:reduce) {
+  #v-stage.reflection-path .ncard.is-centered > img,
+  #v-stage.reflection-path .ncard.is-centered.is-look-more > img { animation:none; }
 }
 </style>
 

@@ -97,3 +97,21 @@ test('reduced motion settles instantly', () => {
   s.dispatch('keydown', { key: 'ArrowRight' });
   assert.equal(s.selected(), 2); assert.equal(s.context.boosterPhase, 2);
 });
+
+test('touch capture transferring from a mirror to the carousel does not cancel the swipe', () => {
+  const s = setup();
+  s.carousel.setPointerCapture = () => s.dispatch('lostpointercapture', { target: s.cards[1], pointerType: 'touch' });
+  s.dispatch('pointerdown', { target: s.cards[1], pointerType: 'touch' });
+  s.dispatch('pointermove', { clientX: 480, pointerType: 'touch' });
+  assert.ok(s.context.boosterPointer, 'capture lost by the child must not end the gesture');
+  s.dispatch('pointermove', { clientX: 270, pointerType: 'touch' });
+  s.dispatch('pointerup', { clientX: 270, pointerType: 'touch' }); s.finish();
+  assert.equal(s.selected(), 2);
+  assert.deepEqual(s.destinations, []);
+});
+
+test('losing carousel capture still ends the gesture safely', () => {
+  const s = setup(); s.dispatch('pointerdown'); s.dispatch('pointermove', { clientX: 280 });
+  s.dispatch('lostpointercapture', { target: s.carousel }); s.finish();
+  assert.equal(s.context.boosterPointer, null);
+});
