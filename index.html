@@ -645,6 +645,7 @@
     width:min(var(--saver-card-width),100%); margin:0 auto;
     display:flex; justify-content:flex-end;
   }
+  .saver-save-status { flex:1; align-self:center; margin:0 12px 0 0; color:#ccc; font-size:12px; line-height:1.4; }
   .saver-actions button,.saver-download { min-height:52px; border:0; border-radius:8px; padding:0 18px; display:flex; align-items:center; justify-content:center; text-decoration:none; font:700 10px/1 Arial,Helvetica,sans-serif; letter-spacing:.18em; }
   #v-saver .saver-download { width:56px; padding:0; background:#151515; border:1px solid rgba(255,255,255,.38); color:#fff; }
   .saver-download svg { width:21px; height:21px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
@@ -991,9 +992,10 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
 <!-- ============================= 9 · SAVER ============================= -->
 <section class="view" id="v-saver">
   <div class="saver">
-    <img class="saver-wallpaper" id="saverWallpaper" alt="Selected nudge card" role="button" tabindex="0" aria-label="Download this nudge card">
+    <img class="saver-wallpaper" id="saverWallpaper" alt="Selected nudge card" role="button" tabindex="0" aria-label="Save this nudge card">
     <div class="saver-actions">
-      <a class="saver-download" id="downloadWallpaper" download="daily-xcellence-glance-card.jpg" aria-label="Save card image" title="Save card">
+      <p class="saver-save-status" id="saverSaveStatus" role="status" aria-live="polite"></p>
+      <a class="saver-download" id="downloadWallpaper" download="daily-xcellence-glance-card.jpg" target="_blank" rel="noopener" aria-label="Save card image" title="Save card">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 20h14"/></svg>
       </a>
     </div>
@@ -1378,7 +1380,7 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
       return {source:source,folder:stage.folder,number:number,card:GLANCE_CARDS[source],guidance:NUDGE_GUIDANCE[number]};
     });
     deck.push({
-      image:'images/Look More Nudge Card '+stage.lookMore+'.jpeg',
+      image:'images/Look More Nudge Card '+stage.lookMore+'.png',
       destination:'lookmore',
       guidance:LOOK_MORE_GUIDANCE[key],
       card:{h:'LOOK MORE',w:stage.ask}
@@ -1696,6 +1698,36 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
     var color=folder.replace(' Nudge Card','');
     return 'images/'+encodeURIComponent(folder)+'/Nudge_Card_'+color+'_'+String(number).padStart(2,'0')+'.png';
   }
+  var saverFile=null,saverPreparing=false,saverSharing=false,saverLoadId=0;
+  function nativeCardSharing(){
+    return typeof navigator!=='undefined'&&typeof navigator.share==='function'&&typeof navigator.canShare==='function'&&
+      (window.matchMedia('(pointer: coarse)').matches||/iPhone|iPad|iPod|Android/i.test(navigator.userAgent||''));
+  }
+  function setSaverStatus(message){document.getElementById('saverSaveStatus').textContent=message;}
+  function prepareSaverFile(path,name){
+    var loadId=++saverLoadId;saverFile=null;saverPreparing=false;setSaverStatus('');
+    if(!nativeCardSharing())return;
+    saverPreparing=true;
+    // Load before activation so sharing starts directly inside the next tap.
+    fetch(path).then(function(response){if(!response.ok)throw new Error('Image unavailable');return response.blob();})
+      .then(function(blob){
+        if(loadId!==saverLoadId)return;
+        var type=blob.type||(/\.png$/i.test(name)?'image/png':'image/jpeg');
+        saverFile=new File([blob],name,{type:type});saverPreparing=false;
+        setSaverStatus('');
+      }).catch(function(){if(loadId===saverLoadId){saverPreparing=false;saverFile=null;}});
+  }
+  async function saveNudgeCard(e){
+    if(!nativeCardSharing())return;
+    if(saverPreparing){e.preventDefault();setSaverStatus('Preparing image. Please tap again in a moment.');return;}
+    if(!saverFile||!navigator.canShare({files:[saverFile]}))return;
+    e.preventDefault();
+    if(saverSharing)return;
+    saverSharing=true;setSaverStatus('');
+    try{await navigator.share({files:[saverFile],title:'Pocket Mirror — Nudge Card'});}
+    catch(error){if(error.name!=='AbortError')setSaverStatus('Could not open sharing. Press and hold the card to save its image.');}
+    finally{saverSharing=false;}
+  }
   function paintSaver(card){
     card=card||activeDeck[picked]||{source:0,invert:false};
     var path=cardImage(card),wallpaper=document.getElementById('saverWallpaper');
@@ -1706,6 +1738,7 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
     // Use the complete artwork for both preview and download, including its patterned shell.
     download.href=path;
     download.download=decodeURIComponent(path.split('/').pop());
+    prepareSaverFile(path,download.download);
     wallpaper.src=path;
     if(wallpaper.complete&&wallpaper.naturalWidth)wallpaper.onload();
   }
@@ -1953,6 +1986,7 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
     else { document.getElementById("menu").classList.remove("on"); }
   });
 
+  document.getElementById('downloadWallpaper').addEventListener('click',saveNudgeCard);
   document.getElementById('saverWallpaper').addEventListener('click',function(){
     document.getElementById('downloadWallpaper').click();
   });

@@ -224,6 +224,7 @@ test('enlarged card preserves the complete artwork and card activation uses Down
   s.context.document.getElementById=id=>id==='saverWallpaper'?wallpaper:download;
   const start=html.indexOf('  function paintSaver(card)');
   vm.runInContext(html.slice(start,html.indexOf('  function paintStory',start)),s.context);
+  s.context.prepareSaverFile=()=>{};
   s.context.paintSaver(s.context.activeDeck[0]);
   assert.equal(wallpaper.src,s.context.cardImage(s.context.activeDeck[0]));
   assert.equal(download.href,wallpaper.src,'preview and download use the same uncropped file');
@@ -237,4 +238,47 @@ test('enlarged card preserves the complete artwork and card activation uses Down
   listeners.keydown({key:'ArrowRight',preventDefault(){throw Error('Unrelated key intercepted');}});
   assert.equal(download.clicks,3);assert.equal(prevented,2);
   assert.ok(!html.includes('id="shareWallpaper"'));
+});
+
+function setupSharing() {
+  const status={textContent:''},shares=[];
+  const context=vm.createContext({
+    document:{getElementById:()=>status},window:{matchMedia:()=>({matches:true})},
+    navigator:{userAgent:'iPhone',canShare:()=>true,share:data=>{shares.push(data);return Promise.resolve();}},
+    File:class {constructor(parts,name,opts){this.parts=parts;this.name=name;this.type=opts.type;}},
+    fetch:async()=>({ok:true,blob:async()=>({type:'image/png'})})
+  });
+  const start=html.indexOf('  var saverFile=');
+  vm.runInContext(html.slice(start,html.indexOf('  function paintSaver(card)',start)),context);
+  return {context,status,shares};
+}
+test('phone saving shares the actual image file without navigating, including on cancellation', async () => {
+  const s=setupSharing(),file={name:'card.png'};s.context.saverFile=file;
+  let prevented=0;
+  await s.context.saveNudgeCard({preventDefault(){prevented++;}});
+  assert.equal(prevented,1);assert.equal(s.shares.length,1);assert.equal(s.shares[0].files[0],file);
+  s.context.navigator.share=()=>Promise.reject({name:'AbortError'});
+  await s.context.saveNudgeCard({preventDefault(){prevented++;}});
+  assert.equal(prevented,2);assert.equal(s.status.textContent,'');assert.equal(s.context.saverSharing,false);
+});
+test('saving during image preparation stays in the app; unsupported sharing permits fallback', async () => {
+  const s=setupSharing();let prevented=0;
+  s.context.saverPreparing=true;
+  await s.context.saveNudgeCard({preventDefault(){prevented++;}});
+  assert.equal(prevented,1);assert.equal(s.shares.length,0);assert.match(s.status.textContent,/Preparing/);
+  s.context.saverPreparing=false;s.context.saverFile={};s.context.navigator.canShare=()=>false;
+  await s.context.saveNudgeCard({preventDefault(){prevented++;}});
+  assert.equal(prevented,1);assert.equal(s.shares.length,0);
+  assert.match(html, /id="downloadWallpaper"[^>]+target="_blank"/);
+  s.context.window.matchMedia=()=>({matches:false});s.context.navigator.userAgent='Desktop';
+  s.context.navigator.canShare=()=>true;
+  await s.context.saveNudgeCard({preventDefault(){prevented++;}});
+  assert.equal(prevented,1,'desktop download proceeds normally');
+});
+test('image file is prepared before the user activates Save', async () => {
+  const s=setupSharing();s.context.prepareSaverFile('images/card.png','card.png');
+  assert.equal(s.context.saverPreparing,true);
+  for(let i=0;i<10;i++)await Promise.resolve();
+  assert.equal(s.context.saverPreparing,false);assert.equal(s.context.saverFile.name,'card.png');
+  assert.equal(s.context.saverFile.type,'image/png');assert.equal(s.shares.length,0);
 });
