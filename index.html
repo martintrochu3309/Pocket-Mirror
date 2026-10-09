@@ -536,7 +536,8 @@
     border-radius:15px;
     display:block; text-align:center;
     cursor:pointer; will-change:transform;
-    transition:transform 520ms cubic-bezier(.32,0,.18,1), opacity 520ms ease;
+    /* Carousel transforms follow the gesture / settling RAF directly. */
+    transition:none;
     box-shadow:0 26px 48px rgba(0,0,0,.72);
     overflow:hidden; background:#fff;
   }
@@ -816,7 +817,7 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
   </div>
   <h1 id="stageName" class="sr-only">AWARENESS</h1>
   <div class="page">
-    <p class="eyebrow" id="stageAsk"></p>
+    <p class="eyebrow" id="stageAsk" hidden></p>
     <div id="glanceExperience">
       <div class="flow" id="flow" tabindex="0" role="listbox" aria-label="Reflection cards" aria-describedby="reflectionKeyboardHint">
       </div>
@@ -1458,7 +1459,7 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
 
     document.documentElement.setAttribute("data-surface", LIT[where] ? "lit" : "dark");
     document.getElementById(id).classList.add("on");
-    if (where === "awareness" || where === "acceptance" || where === "action") requestAnimationFrame(place);
+    if (where === "awareness" || where === "acceptance" || where === "action") requestAnimationFrame(function(){measureDeck();place();});
     document.body.style.overflow = (where === "open" || where === "saver") ? "hidden" : "";
     window.scrollTo(0, 0);
     current = where;
@@ -1764,6 +1765,11 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
   var cards   = [];
   var activeDeck = [];
   var pos = 0, target = 0, picked = 0, spinning = null;
+  var deckWidth = 220;
+  function measureDeck() {
+    var width=cards[0]&&cards[0].offsetWidth;
+    if(width)deckWidth=width;
+  }
 
   function setNudgeFlipped(card,flipped) {
     if(!card._frontFace)return;
@@ -1780,7 +1786,6 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
     if(card._lookMoreButton)card._lookMoreButton.tabIndex=selected&&flipped?0:-1;
     if(focused&&selected)(flipped?card._backButton:card._frontButton).focus({preventScroll:true});
   }
-  function resetNudgeFlips(){cards.forEach(function(card){setNudgeFlipped(card,false);});}
   function openGlanceCard() {
     var item=activeDeck[picked],card=cards[picked];
     if(item.flip){setNudgeFlipped(card,!card._flipped);return;}
@@ -1834,15 +1839,15 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
       dot.type='button';dot.className='nudge-dot';
       dot.setAttribute('aria-label','Card '+(index+1)+' of '+activeDeck.length+': '+item.card.h.replace(/\n/g,' '));
       dot.setAttribute('aria-controls','flow');
-      dot.addEventListener('click',function(){if(index!==picked)resetNudgeFlips();target=index;spin();});
+      dot.addEventListener('click',function(){target=index;spin();});
       nudgeDots.appendChild(dot);nudgeDotButtons.push(dot);
     });
-    place(); mark();
+    measureDeck();place(); mark();
   }
 
   function place() {
     if (!cards.length) return;
-    var W = cards[0].offsetWidth || 220;
+    var W = deckWidth;
     cards.forEach(function (c, i) {
       var o = i - pos, a = Math.abs(o), sgn = o < 0 ? -1 : 1;
       if (a > 3.4) { c.style.opacity = 0; c.style.pointerEvents = "none"; return; }
@@ -1864,9 +1869,10 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
   }
 
   function mark() {
-    var k = Math.round(pos);
-    if (k !== picked) picked = k;
-    cards.forEach(function(c,i){c.setAttribute('aria-selected',i===picked?'true':'false');c.classList.toggle('is-centered',i===picked);if(c._frontFace)setNudgeFlipped(c,i===picked?!!c._flipped:false);});
+    var k = Math.max(0,Math.min(cards.length-1,Math.round(pos)));
+    if(k===picked&&guidancePicked===picked)return;
+    picked = k;
+    cards.forEach(function(c,i){c.setAttribute('aria-selected',i===picked?'true':'false');c.classList.toggle('is-centered',i===picked);if(c._frontFace)setNudgeFlipped(c,!!c._flipped);});
     nudgeDotButtons.forEach(function(dot,i){
       dot.classList.toggle('is-active',i===picked);
       if(i===picked)dot.setAttribute('aria-current','true');else dot.removeAttribute('aria-current');
@@ -1894,42 +1900,48 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
     })();
   }
 
-  var grab = 0, grabPos = 0, turning = false, dragged = false, pressedCard = null;
-
-  flow.addEventListener("pointerdown", function (e) {
+  var grab=0,grabY=0,grabPos=0,turning=false,dragged=false,pressedCard=null,flowPointerId=null;
+  flow.addEventListener('pointerdown',function(e){
+    if(e.isPrimary===false||(e.button!==undefined&&e.button!==0)||turning)return;
     if(e.target.closest('.ncard-back-lookmore'))return;
-    turning = true; dragged = false; grab = e.clientX; grabPos = pos;
-    pressedCard = e.target.closest(".ncard");
-    if (spinning) { cancelAnimationFrame(spinning); spinning = null; }
-    cards.forEach(function (c) { c.classList.add("dragging"); });
-    try { flow.setPointerCapture(e.pointerId); } catch (err) {}
+    measureDeck();
+    turning=true;dragged=false;grab=e.clientX;grabY=e.clientY||0;grabPos=pos;flowPointerId=e.pointerId;
+    pressedCard=e.target.closest('.ncard');
+    if(spinning){cancelAnimationFrame(spinning);spinning=null;}
   });
-  flow.addEventListener("pointermove", function (e) {
-    if (!turning) return;
-    var d = e.clientX - grab;
-    if (Math.abs(d) > 5&&!dragged){dragged=true;resetNudgeFlips();}
-    var W = (cards[0] && cards[0].offsetWidth) || 220;
-    pos = Math.max(-0.4, Math.min(activeDeck.length - 0.6, grabPos - d / (W * 0.56)));
-    place(); mark();
-  });
-  function letGo(cancelled) {
-    if (!turning) return;
-    turning = false;
-    cards.forEach(function (c) { c.classList.remove("dragging"); });
-    var tappedCard = !cancelled && !dragged ? pressedCard : null;
-    pressedCard = null;
-    if (tappedCard) {
-      var k = cards.indexOf(tappedCard);
-      if (k === picked) openGlanceCard();
-      else { target = k; spin(); }
-    } else {
-      target = Math.max(0, Math.min(activeDeck.length - 1, Math.round(pos)));
-      spin();
+  flow.addEventListener('pointermove',function(e){
+    if(!turning||(e.pointerId!==undefined&&e.pointerId!==flowPointerId))return;
+    var dx=e.clientX-grab,dy=(e.clientY===undefined?grabY:e.clientY)-grabY;
+    if(!dragged){
+      // Leave vertical gestures to the browser; capture only a deliberate horizontal swipe.
+      if(Math.abs(dy)>8&&Math.abs(dy)>Math.abs(dx)){letGo(true);return;}
+      if(Math.abs(dx)<8)return;
+      dragged=true;
+      cards.forEach(function(c){c.classList.add('dragging');});
+      try{flow.setPointerCapture(flowPointerId);}catch(err){}
     }
-    setTimeout(function () { dragged = false; }, 40);
+    if(e.cancelable)e.preventDefault();
+    var W=deckWidth;
+    pos=Math.max(-.4,Math.min(activeDeck.length-.6,grabPos-dx/(W*.56)));
+    place();mark();
+  });
+  function letGo(cancelled){
+    if(!turning)return;
+    turning=false;
+    var pointerId=flowPointerId;flowPointerId=null;
+    cards.forEach(function(c){c.classList.remove('dragging');});
+    if(flow.hasPointerCapture&&flow.hasPointerCapture(pointerId))flow.releasePointerCapture(pointerId);
+    var tappedCard=!cancelled&&!dragged?pressedCard:null;
+    pressedCard=null;
+    if(tappedCard){
+      var k=cards.indexOf(tappedCard);
+      if(k===picked)openGlanceCard();else{target=k;spin();}
+    }else{target=Math.max(0,Math.min(activeDeck.length-1,Math.round(pos)));spin();}
+    setTimeout(function(){dragged=false;},40);
   }
-  flow.addEventListener("pointerup", function () { letGo(false); });
-  flow.addEventListener("pointercancel", function () { letGo(true); });
+  flow.addEventListener('pointerup',function(){letGo(false);});
+  flow.addEventListener('pointercancel',function(){letGo(true);});
+  flow.addEventListener('lostpointercapture',function(e){if(e.target===flow)letGo(true);});
 
   flow.addEventListener("keydown", function (e) {
     if(e.target&&e.target.closest('.ncard-back-lookmore'))return;
@@ -1942,12 +1954,11 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
     var step = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
     if (!step) return;
     e.preventDefault();
-    resetNudgeFlips();
     target = Math.max(0, Math.min(activeDeck.length - 1, Math.round(pos) + step));
     spin();
   });
 
-  window.addEventListener("resize", function () { place();syncSaverLayout(); });
+  window.addEventListener("resize", function () { measureDeck();place();syncSaverLayout(); });
 
   /* ---- Global handlers ---------------------------------------------- */
   document.addEventListener("click", function (e) {
@@ -3399,15 +3410,14 @@ body .menu-item{
 #v-stage.reflection-path .nudge-dot::before { content:''; width:7px; height:7px; border-radius:50%; background:currentColor; opacity:.25; transition:opacity 180ms ease; }
 #v-stage.reflection-path .nudge-dot.is-active::before { opacity:1; }
 #v-stage.reflection-path .nudge-picker { flex:none; width:100%; margin-top:auto; border:1px solid var(--rule-sc); border-radius:24px; background:var(--fill); box-shadow:inset 0 0 0 1px rgba(128,128,128,.06); overflow:hidden; }
-#v-stage.reflection-path .nudge-picker summary { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:60px; padding:15px 20px; cursor:pointer; list-style:none; color:var(--ink); font:700 12px/1.3 Arial,sans-serif; letter-spacing:.08em; }
+#v-stage.reflection-path .nudge-picker summary { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:60px; padding:15px 20px; cursor:pointer; list-style:none; color:var(--ink); font:700 12px/1.3 "Magistral",Arial,sans-serif; letter-spacing:.08em; }
 #v-stage.reflection-path .nudge-picker summary::-webkit-details-marker { display:none; }
 #v-stage.reflection-path .nudge-picker-arrow { display:grid; place-items:center; flex:none; width:32px; height:32px; border:1px solid var(--rule); border-radius:50%; color:var(--ink-mid); }
 #v-stage.reflection-path .nudge-picker-arrow svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2; transform:rotate(-90deg); transition:transform 180ms ease; }
 #v-stage.reflection-path .nudge-picker[open] .nudge-picker-arrow svg { transform:none; }
-#v-stage.reflection-path .nudge-conditions { list-style:none; counter-reset:nudge-condition; margin:0; padding:0 20px 12px; }
-#v-stage.reflection-path .nudge-conditions li { counter-increment:nudge-condition; display:grid; grid-template-columns:25px 1fr; gap:12px; align-items:center; min-height:48px; padding:10px 0; color:var(--ink); font:400 15px/1.35 var(--body),Arial,sans-serif; }
+#v-stage.reflection-path .nudge-conditions { list-style:none; margin:0; padding:0 20px 12px; }
+#v-stage.reflection-path .nudge-conditions li { display:block; min-height:48px; padding:10px 0; color:var(--ink); font:400 15px/1.35 var(--body),Arial,sans-serif; }
 #v-stage.reflection-path .nudge-conditions li + li { border-top:1px solid var(--rule-sc); }
-#v-stage.reflection-path .nudge-conditions li::before { content:counter(nudge-condition,decimal-leading-zero); color:var(--ink-mid); opacity:.7; font:italic 700 12px/1 Arial,sans-serif; }
 @media (prefers-reduced-motion:reduce) {
   #v-stage.reflection-path .nudge-dot::before,#v-stage.reflection-path .nudge-picker-arrow svg { transition:none; }
 }
@@ -3425,8 +3435,7 @@ body .menu-item{
 #v-stage.reflection-path .nudge-picker summary { min-height:44px; padding:10px 16px; font-size:11px; letter-spacing:.07em; }
 #v-stage.reflection-path .nudge-picker-arrow { width:27px; height:27px; }
 #v-stage.reflection-path .nudge-conditions { padding:0 16px 8px; }
-#v-stage.reflection-path .nudge-conditions li { grid-template-columns:20px 1fr; gap:10px; min-height:36px; padding:7px 0; font-size:clamp(12px,3.4vw,14px); line-height:1.3; }
-#v-stage.reflection-path .nudge-conditions li::before { font-size:11px; }
+#v-stage.reflection-path .nudge-conditions li { min-height:36px; padding:7px 0; font-size:clamp(12px,3.4vw,14px); line-height:1.3; }
 
 /* Inner rotation is independent of the carousel's outer translation and depth. */
 #v-stage.reflection-path .ncard.has-flip { perspective:1200px; }
@@ -3435,18 +3444,40 @@ body .menu-item{
 #v-stage.reflection-path .ncard-face { position:absolute; inset:0; border-radius:inherit; backface-visibility:hidden; -webkit-backface-visibility:hidden; transform:rotateY(0deg) translateZ(.1px); box-shadow:0 14px 28px rgba(0,0,0,.28); }
 #v-stage.reflection-path .ncard-back { transform:rotateY(180deg) translateZ(.1px); }
 #v-stage.reflection-path .ncard-flip-toggle { display:block; width:100%; height:100%; margin:0; padding:0; border:0; border-radius:inherit; background:transparent; cursor:pointer; -webkit-tap-highlight-color:transparent; }
-#v-stage.reflection-path .ncard-flip-toggle img { display:block; width:100%; height:100%; border-radius:inherit; object-fit:contain; pointer-events:none; }
+#v-stage.reflection-path .ncard-flip-toggle img { display:block; width:100%; height:100%; border-radius:inherit; clip-path:inset(0 round 15px); object-fit:contain; pointer-events:none; }
 #v-stage.reflection-path .ncard-flip-toggle:focus-visible { outline:2px solid #ebc66b; outline-offset:4px; }
 #v-stage.reflection-path .ncard-back-lookmore { position:absolute; z-index:1; bottom:6%; left:14%; width:72%; min-height:40px; padding:10px 12px; border:1px solid #aa802c; border-radius:22px; background:linear-gradient(110deg,#d1a449,#fff0ad,#d1a449); color:#111; font:700 11px/1.2 Arial,sans-serif; letter-spacing:.08em; cursor:pointer; }
 @media (prefers-reduced-motion:reduce) { #v-stage.reflection-path .ncard-turn { transition:none; } }
 
+/* Allow page scrolling and keep touch gestures separate from card activation. */
+#v-stage.reflection-path[data-stage="awareness"].on { overflow:visible; }
+#v-stage.reflection-path[data-stage="awareness"] > .page { height:auto; min-height:calc(100dvh - 80px - var(--stage-nav-space,0px) - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)); }
+#v-stage.reflection-path[data-stage="awareness"] #glanceExperience { flex:none; height:calc(100dvh - 132px - var(--stage-nav-space,0px) - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)); min-height:500px; }
+#v-stage.reflection-path .flow, #v-stage.reflection-path .ncard-flip-toggle { touch-action:pan-y pinch-zoom; }
+/* The soft arrival highlight follows each rotating face rather than a stationary outer frame. */
 #v-stage.reflection-path[data-stage="awareness"] .ncard.has-flip.is-centered { box-shadow:none; }
-#v-stage.reflection-path .ncard.has-flip.is-flipped::after { opacity:0; animation:none; }
-#v-stage.reflection-path .ncard.has-flip.is-centered .ncard-front img { animation:reflection-highlight-arrival 1100ms ease-in-out; }
-#v-stage.reflection-path .ncard.has-flip.is-centered.is-look-more .ncard-front img { animation:reflection-lookmore-arrival 1250ms ease-in-out; }
+#v-stage.reflection-path .ncard.has-flip::after { content:none; }
+#v-stage.reflection-path .ncard-face::after {
+  content:''; position:absolute; inset:-1px; border-radius:inherit; padding:3px;
+  background:conic-gradient(from var(--reflection-glint-angle),rgba(160,190,225,.7) 0deg,rgba(160,190,225,.7) 40deg,#fff 65deg,rgba(160,190,225,.7) 95deg,rgba(160,190,225,.7) 220deg,#fff 245deg,rgba(160,190,225,.7) 275deg);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0); -webkit-mask-composite:xor;
+  mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0); mask-composite:exclude;
+  opacity:0; transition:opacity 240ms ease; pointer-events:none;
+}
+#v-stage.reflection-path .has-flip.is-centered .ncard-face::after { opacity:.3; }
+#v-stage.reflection-path .has-flip.is-centered:not(.is-flipped) .ncard-front::after,
+#v-stage.reflection-path .has-flip.is-centered.is-flipped .ncard-back::after { animation:reflection-edge-arrival 1100ms ease-in-out; }
+#v-stage.reflection-path .has-flip .ncard-flip-toggle img { filter:drop-shadow(0 0 1px transparent) drop-shadow(0 0 5px transparent); transition:filter 240ms ease; }
+#v-stage.reflection-path .has-flip.is-centered .ncard-flip-toggle img { filter:drop-shadow(0 0 1px rgba(255,255,255,.4)) drop-shadow(0 0 6px rgba(215,235,255,.16)); }
+#v-stage.reflection-path .has-flip.is-centered:not(.is-flipped) .ncard-front img,
+#v-stage.reflection-path .has-flip.is-centered.is-flipped .ncard-back img { animation:reflection-highlight-arrival 1100ms ease-in-out; }
 @media (prefers-reduced-motion:reduce) {
-  #v-stage.reflection-path .ncard.has-flip.is-centered .ncard-front img,
-  #v-stage.reflection-path .ncard.has-flip.is-centered.is-look-more .ncard-front img { animation:none; }
+  #v-stage.reflection-path .has-flip .ncard-face::after,
+  #v-stage.reflection-path .has-flip .ncard-flip-toggle img { transition:none; }
+  #v-stage.reflection-path .has-flip.is-centered .ncard-front::after,
+  #v-stage.reflection-path .has-flip.is-centered .ncard-back::after,
+  #v-stage.reflection-path .has-flip.is-centered .ncard-front img,
+  #v-stage.reflection-path .has-flip.is-centered .ncard-back img { animation:none; }
 }
 </style>
 

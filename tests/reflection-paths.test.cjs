@@ -128,7 +128,7 @@ test('Awareness hides its guidance panel without hiding it on the other paths', 
   }
 });
 
-test('Awareness flips back and forth, keeps carousel transforms intact, and resets when changing cards', () => {
+test('Awareness flips back and forth and preserves its face when changing cards', () => {
   const s = setup(); s.context.paintDeck('awareness');
   const first = s.context.cards[0], transform = first.style.transform;
   s.key('Enter'); assert.equal(first._flipped, true);
@@ -136,9 +136,10 @@ test('Awareness flips back and forth, keeps carousel transforms intact, and rese
   assert.equal(first._frontFace.inert, true); assert.equal(first._backFace.inert, false);
   first._backButton.listeners.click({detail:0}); assert.equal(first._flipped, false);
   s.key(' '); assert.equal(first._flipped, true);
-  s.dots.children[1].listeners.click(); assert.equal(first._flipped, false);
+  s.dots.children[1].listeners.click(); assert.equal(first._flipped, true);
   assert.equal(s.context.cards[1]._flipped, false);
-  s.dots.children[0].listeners.click(); assert.equal(first._flipped, false);
+  s.dots.children[0].listeners.click(); assert.equal(first._flipped, true);
+  s.key('Enter'); assert.equal(first._flipped, false);
   assert.equal(s.calls.length, 0);
 });
 test('Awareness pointer taps flip once and dragging does not flip or navigate', () => {
@@ -151,8 +152,8 @@ test('Awareness pointer taps flip once and dragging does not flip or navigate', 
   s.flow.listeners.pointerdown({clientX:500,target,pointerId:2});
   s.flow.listeners.pointermove({clientX:340});
   s.flow.listeners.pointerup();
-  assert.equal(first._flipped, false);
-  assert.ok(s.context.cards.every(card => !card._flipped));
+  assert.equal(first._flipped, true);
+  assert.ok(s.context.cards.slice(1).every(card => !card._flipped));
   assert.equal(s.calls.length, 0);
 });
 test('Awareness backs 1–4 exist and are preloaded as separate mounted faces', () => {
@@ -164,4 +165,51 @@ test('Awareness backs 1–4 exist and are preloaded as separate mounted faces', 
     assert.equal(card._backButton.children[0].src, item.backImage);
     assert.equal(card._backButton.children[0].loading, 'eager');
   });
+});
+
+test('vertical dragging over Awareness permits native scrolling without flipping or selecting a card', () => {
+  const s = setup(); s.context.paintDeck('awareness');
+  const first=s.context.cards[0], target={closest: selector => selector==='.ncard'?first:null};
+  let captures=0, prevented=0;
+  s.flow.setPointerCapture=()=>{captures++;};
+  s.flow.listeners.pointerdown({clientX:500,clientY:100,pointerId:1,target});
+  assert.equal(captures,0,'pointerdown must not capture a possible vertical scroll');
+  s.flow.listeners.pointermove({clientX:503,clientY:170,pointerId:1,cancelable:true,preventDefault(){prevented++;}});
+  s.flow.listeners.pointerup();
+  assert.equal(captures,0); assert.equal(prevented,0);
+  assert.equal(s.context.turning,false); assert.equal(s.context.picked,0);
+  assert.equal(first._flipped,false); assert.equal(s.calls.length,0);
+});
+test('horizontal swiping tolerates child capture transfer and preserves previously flipped cards', () => {
+  const s=setup(); s.context.paintDeck('awareness'); s.key('Enter');
+  const first=s.context.cards[0], target={closest: selector => selector==='.ncard'?first:null};
+  s.flow.setPointerCapture=()=>s.flow.listeners.lostpointercapture({target:first});
+  s.flow.listeners.pointerdown({clientX:500,clientY:100,pointerId:1,target});
+  s.flow.listeners.pointermove({clientX:460,clientY:102,pointerId:1});
+  assert.equal(s.context.turning,true);
+  s.flow.listeners.pointermove({clientX:340,clientY:105,pointerId:1});
+  s.flow.listeners.pointerup();
+  assert.equal(s.context.picked,1); assert.equal(first._flipped,true);
+  s.key('ArrowLeft'); assert.equal(s.context.picked,0); assert.equal(first._flipped,true);
+});
+
+test('swipe positions update immediately without repeated layout reads or selection writes', () => {
+  const s=setup(); s.context.paintDeck('awareness');
+  const first=s.context.cards[0], target={closest: selector => selector==='.ncard'?first:null};
+  s.flow.listeners.pointerdown({clientX:500,clientY:100,pointerId:1,target});
+  let writes=0;
+  for(const card of s.context.cards){
+    Object.defineProperty(card,'offsetWidth',{get(){throw new Error('Layout read during swipe');}});
+    const set=card.setAttribute;card.setAttribute=(...args)=>{writes++;set(...args);};
+  }
+  s.flow.listeners.pointermove({clientX:480,clientY:101,pointerId:1});
+  const firstTransform=first.style.transform;
+  assert.ok(Math.abs(s.context.pos-20/(220*.56))<1e-9);
+  s.flow.listeners.pointermove({clientX:460,clientY:102,pointerId:1});
+  assert.ok(Math.abs(s.context.pos-40/(220*.56))<1e-9);
+  assert.notEqual(first.style.transform,firstTransform);
+  assert.equal(writes,0,'unchanged selection does not update every face on each move');
+  assert.equal(first._flipped,false);
+  s.flow.listeners.pointerup();
+  assert.equal(s.calls.length,0);
 });
