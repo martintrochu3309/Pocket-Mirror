@@ -38,9 +38,11 @@ function setup() {
     key: key => flow.listeners.keydown({ key, preventDefault() {} }) };
 }
 for (const stage of ['awareness', 'acceptance', 'action']) {
-  test(stage + ' has four regular cards, then Look More with stronger center emphasis', () => {
+  test(stage + ' has its regular cards, then Look More with stronger center emphasis', () => {
     const s = setup(); s.context.paintDeck(stage);
-    assert.equal(s.context.cards.length, 5);
+    const last=stage==='awareness'?4:6;
+    assert.equal(s.context.cards.length,last+1);
+    assert.ok(s.context.activeDeck.slice(0,last).every(item=>item.guidance.length===3));
     assert.equal(s.context.cards.filter(c => c.classes.has('is-centered')).length, 1);
     const backScale = Number(s.context.cards[1].style.transform.match(/scale\(([^)]+)\)/)[1]);
     assert.ok(Math.abs(backScale - .93 * .95) < .001, 'background neighbor is five percent smaller');
@@ -48,15 +50,15 @@ for (const stage of ['awareness', 'acceptance', 'action']) {
     s.key('Enter');
     if(stage==='awareness'){assert.equal(s.context.cards[0]._flipped,true);assert.equal(s.calls.length,0);}
     else assert.equal(s.calls.at(-1).route, 'saver');
-    for (let i = 0; i < 4; i++) s.key('ArrowRight');
-    assert.equal(s.context.picked, 4);
-    assert.match(s.context.cards[4].className, /is-look-more/);
-    assert.equal(s.context.cards[4].attributes['aria-selected'], 'true');
-    assert.match(s.context.cards[4].style.transform, /translateZ\(32.0px\).*scale\(1.040\)/);
-    s.key('ArrowRight'); assert.equal(s.context.picked, 4);
+    for (let i = 0; i < last; i++) s.key('ArrowRight');
+    assert.equal(s.context.picked, last);
+    assert.match(s.context.cards[last].className, /is-look-more/);
+    assert.equal(s.context.cards[last].attributes['aria-selected'], 'true');
+    assert.match(s.context.cards[last].style.transform, /translateZ\(32.0px\).*scale\(1.040\)/);
+    s.key('ArrowRight'); assert.equal(s.context.picked, last);
     s.key('Enter');
-    assert.equal(s.context.activeDeck[4].flip,undefined);
-    assert.equal(s.context.cards[4]._frontFace,undefined);
+    assert.equal(s.context.activeDeck[last].flip,undefined);
+    assert.equal(s.context.cards[last]._frontFace,undefined);
     assert.equal(s.calls.at(-1).route, 'lookmore');
   });
 }
@@ -101,9 +103,9 @@ test('preview reset clears access only when requested and consumes the reset par
 for (const stage of ['awareness', 'acceptance', 'action']) {
   test(stage + ' dots select cards and update three guidance statements without opening a path', () => {
     const s = setup(); s.context.paintDeck(stage);
-    assert.equal(s.dots.children.length, 5);
+    assert.equal(s.dots.children.length, stage==='awareness'?5:7);
     assert.equal(s.picker.open, true);
-    for (const index of [2, 4, 0, 3, 1]) {
+    for (const index of [2, s.dots.children.length-1, 0, 3, 1]) {
       s.dots.children[index].listeners.click();
       assert.equal(s.context.picked, index);
       assert.equal(s.dots.children.filter(dot => dot.attributes['aria-current'] === 'true').length, 1);
@@ -123,8 +125,8 @@ test('Awareness hides its guidance panel without hiding it on the other paths', 
   for (const stage of ['awareness', 'acceptance', 'awareness', 'action']) {
     s.context.paintDeck(stage);
     assert.equal(s.picker.hidden, stage === 'awareness');
-    assert.equal(s.dots.children.length, 5);
-    assert.equal(s.context.cards.length, 5);
+    assert.equal(s.dots.children.length, stage==='awareness'?5:7);
+    assert.equal(s.context.cards.length, stage==='awareness'?5:7);
   }
 });
 
@@ -212,4 +214,27 @@ test('swipe positions update immediately without repeated layout reads or select
   assert.equal(first._flipped,false);
   s.flow.listeners.pointerup();
   assert.equal(s.calls.length,0);
+});
+
+test('enlarged card preserves the complete artwork and card activation uses Download', () => {
+  const s=setup();s.context.paintDeck('acceptance');
+  const wallpaper={style:{}}, download={click(){this.clicks=(this.clicks||0)+1;}};
+  const listeners={};
+  wallpaper.addEventListener=(name,fn)=>listeners[name]=fn;
+  s.context.document.getElementById=id=>id==='saverWallpaper'?wallpaper:download;
+  const start=html.indexOf('  function paintSaver(card)');
+  vm.runInContext(html.slice(start,html.indexOf('  function paintStory',start)),s.context);
+  s.context.paintSaver(s.context.activeDeck[0]);
+  assert.equal(wallpaper.src,s.context.cardImage(s.context.activeDeck[0]));
+  assert.equal(download.href,wallpaper.src,'preview and download use the same uncropped file');
+  assert.equal(download.download,'Nudge_Card_Black_03.png');
+  const handlerStart=html.indexOf("  document.getElementById('saverWallpaper').addEventListener");
+  vm.runInContext(html.slice(handlerStart,html.indexOf('  document.getElementById("saverClose")',handlerStart)),s.context);
+  listeners.click();assert.equal(download.clicks,1);
+  let prevented=0;
+  listeners.keydown({key:'Enter',preventDefault(){prevented++;}});
+  listeners.keydown({key:' ',preventDefault(){prevented++;}});
+  listeners.keydown({key:'ArrowRight',preventDefault(){throw Error('Unrelated key intercepted');}});
+  assert.equal(download.clicks,3);assert.equal(prevented,2);
+  assert.ok(!html.includes('id="shareWallpaper"'));
 });

@@ -37,21 +37,21 @@ function setup(reducedMotion = false) {
   return { cards, carousel, context, dispatch, finish, selected, destinations };
 }
 
-test('starts with OWN IT centered and bright side mirrors at the intended scale', () => {
+test('starts with SEE IT centered and bright side mirrors at the intended scale', () => {
   const s = setup();
-  assert.equal(s.selected(), 1);
-  assert.equal(Number(s.cards[1].styles['--booster-scale']), 1);
-  assert.equal(Number(s.cards[0].styles['--booster-scale']), .74);
+  assert.equal(s.selected(), 0);
+  assert.equal(Number(s.cards[0].styles['--booster-scale']), 1);
+  assert.equal(Number(s.cards[1].styles['--booster-scale']), .74);
   assert.equal(Number(s.cards[2].styles['--booster-scale']), .74);
-  assert.ok(Number(s.cards[1].style.zIndex) > Number(s.cards[0].style.zIndex));
+  assert.ok(Number(s.cards[0].style.zIndex) > Number(s.cards[1].style.zIndex));
 });
 
 test('keyboard cycles infinitely in both directions without a visual reset', () => {
   const s = setup();
-  for (const expected of [2, 0, 1, 2, 0, 1]) {
+  for (const expected of [1, 2, 0, 1, 2, 0]) {
     s.dispatch('keydown', { key: 'ArrowRight' }); s.finish(); assert.equal(s.selected(), expected);
   }
-  for (const expected of [0, 2, 1, 0, 2, 1]) {
+  for (const expected of [2, 1, 0, 2, 1, 0]) {
     s.dispatch('keydown', { key: 'ArrowLeft' }); s.finish(); assert.equal(s.selected(), expected);
   }
   const before = s.cards.map(card => ({ ...card.styles }));
@@ -66,8 +66,8 @@ test('keyboard cycles infinitely in both directions without a visual reset', () 
 test('drag follows the pointer, settles to the nearest tile, and suppresses its click', () => {
   const s = setup();
   s.dispatch('pointerdown'); s.dispatch('pointermove', { clientX: 300 });
-  assert.ok(s.context.boosterPhase > 1 && s.context.boosterPhase < 2);
-  s.dispatch('pointerup', { clientX: 300 }); s.finish(); assert.equal(s.selected(), 2);
+  assert.ok(s.context.boosterPhase > 0 && s.context.boosterPhase < 1);
+  s.dispatch('pointerup', { clientX: 300 }); s.finish(); assert.equal(s.selected(), 1);
   let prevented = false;
   s.cards[2].listeners.click({ detail: 1, preventDefault: () => { prevented = true; } });
   assert.equal(prevented, true); assert.deepEqual(s.destinations, []);
@@ -79,9 +79,9 @@ test('drag follows the pointer, settles to the nearest tile, and suppresses its 
 test('short drag returns to the nearest tile and vertical scrolling does not rotate', () => {
   const s = setup();
   s.dispatch('pointerdown'); s.dispatch('pointermove', { clientX: 470 }); s.dispatch('pointerup'); s.finish();
-  assert.equal(s.selected(), 1);
+  assert.equal(s.selected(), 0);
   s.dispatch('pointerdown'); s.dispatch('pointermove', { clientY: 260 }); s.finish();
-  assert.equal(s.selected(), 1); assert.equal(s.context.boosterPointer, null);
+  assert.equal(s.selected(), 0); assert.equal(s.context.boosterPointer, null);
 });
 
 test('cancelled gestures settle and all mirrors open their destinations from the keyboard', () => {
@@ -95,7 +95,7 @@ test('cancelled gestures settle and all mirrors open their destinations from the
 test('reduced motion settles instantly', () => {
   const s = setup(true);
   s.dispatch('keydown', { key: 'ArrowRight' });
-  assert.equal(s.selected(), 2); assert.equal(s.context.boosterPhase, 2);
+  assert.equal(s.selected(), 1); assert.equal(s.context.boosterPhase, 1);
 });
 
 test('touch capture transferring from a mirror to the carousel does not cancel the swipe', () => {
@@ -106,7 +106,7 @@ test('touch capture transferring from a mirror to the carousel does not cancel t
   assert.ok(s.context.boosterPointer, 'capture lost by the child must not end the gesture');
   s.dispatch('pointermove', { clientX: 270, pointerType: 'touch' });
   s.dispatch('pointerup', { clientX: 270, pointerType: 'touch' }); s.finish();
-  assert.equal(s.selected(), 2);
+  assert.equal(s.selected(), 1);
   assert.deepEqual(s.destinations, []);
 });
 
