@@ -820,6 +820,11 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
     <div id="glanceExperience">
       <div class="flow" id="flow" tabindex="0" role="listbox" aria-label="Reflection cards" aria-describedby="reflectionKeyboardHint">
       </div>
+      <nav class="nudge-dots" id="nudgeDots" aria-label="Choose a nudge"></nav>
+      <details class="nudge-picker" id="nudgePicker" open>
+        <summary><span>PICK THIS NUDGE IF…</span><span class="nudge-picker-arrow" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="m6 8 4 4 4-4"/></svg></span></summary>
+        <ol class="nudge-conditions" id="nudgeConditions" aria-live="polite" aria-atomic="true"></ol>
+      </details>
       <p class="sr-only" id="reflectionKeyboardHint">Use the left and right arrow keys to choose a card. Press Enter to open the centered card.</p>
     </div>
   </div>
@@ -1336,6 +1341,27 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
     { h:"DAILY XCELLENCE\nSTARTS WITH\nYOU.",                              w:"It's not just a mindset.\nIt's a movement.", gold:true }
   ];
 
+  /* Draft guidance shown beneath each selected nudge. */
+  var NUDGE_GUIDANCE = {
+    1:["You keep saying you don't have time.","You start more than you finish.","Distractions pull you off course."],
+    14:["Your mind is somewhere else.","You miss moments by thinking ahead.","People need your full attention."],
+    15:["You're busy, but not moving forward.","You say yes without a clear purpose.","Your priorities keep getting pushed."],
+    18:["You guess instead of checking facts.","You can't tell if it's working.","You want to see your progress."],
+    3:["You explain why before you try.","The same excuse keeps showing up.","You know there is a part you own."],
+    6:["You blame the situation first.","You accept less than you expect.","You're waiting for others to change."],
+    7:["You react before you think.","One comment can ruin your day.","You replay what you wish you'd said."],
+    8:["Your reasons keep delaying action.","You defend a choice that isn't helping.","You know what's really stopping you."],
+    2:["You let the day choose your direction.","You wait for others to move first.","You need one clear next decision."],
+    4:["You start strong, then lose momentum.","You leave promises unfinished.","You need to finish the next step."],
+    5:["You keep choosing what's familiar.","You avoid what feels uncomfortable.","You know staying still has a cost."],
+    9:["You see the opportunity but don't act.","You plan more than you put into practice.","You need to make one idea real."]
+  };
+  var LOOK_MORE_GUIDANCE = {
+    awareness:["You want to understand a pattern.","You need to see another perspective.","You're ready to look a little deeper."],
+    acceptance:["You see the pattern but can't own it.","You want honesty without self-judgment.","You're ready to face your part."],
+    action:["You know what to change, but haven't.","You want a step, not another idea.","You're ready to turn knowing into doing."]
+  };
+
   var STAGE_CARDS = {
     awareness:{folder:'White Nudge Card', numbers:[1,14,15,18], lookMore:'Awareness', ask:'Can I see it?'},
     acceptance:{folder:'Black Nudge Card', numbers:[3,6,7,8], lookMore:'Acceptance', ask:'Can I own it?'},
@@ -1346,13 +1372,20 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
     var stage=STAGE_CARDS[key];
     var deck=stage.numbers.map(function(number){
       var source=number-1;
-      return {source:source,folder:stage.folder,number:number,card:GLANCE_CARDS[source]};
+      return {source:source,folder:stage.folder,number:number,card:GLANCE_CARDS[source],guidance:NUDGE_GUIDANCE[number]};
     });
     deck.push({
-      image:'images/Look More Nudge Card '+stage.lookMore+'.png',
+      image:'images/Look More Nudge Card '+stage.lookMore+'.jpeg',
       destination:'lookmore',
+      guidance:LOOK_MORE_GUIDANCE[key],
       card:{h:'LOOK MORE',w:stage.ask}
     });
+    if(key==='awareness'){
+      deck.slice(0,4).forEach(function(item,index){
+        item.flip=true;
+        item.backImage='images/Nudge Card Back - Awareness '+(index+1)+'.png';
+      });
+    }
     return deck;
   }
 
@@ -1724,28 +1757,85 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
      The cards stand in a fan and you turn them with a finger. `pos` is a
      float so the whole arc tracks the drag, then settles on a card. */
   var flow    = document.getElementById("flow");
+  var nudgeDots=document.getElementById('nudgeDots');
+  var nudgeConditions=document.getElementById('nudgeConditions');
+  var nudgePicker=document.getElementById('nudgePicker');
+  var nudgeDotButtons=[],guidancePicked=-1;
   var cards   = [];
   var activeDeck = [];
   var pos = 0, target = 0, picked = 0, spinning = null;
 
+  function setNudgeFlipped(card,flipped) {
+    if(!card._frontFace)return;
+    var focused=document.activeElement===card._frontButton||document.activeElement===card._backButton;
+    card._flipped=flipped;
+    card.classList.toggle('is-flipped',flipped);
+    var selected=cards[picked]===card;
+    card._frontFace.inert=flipped||!selected;
+    card._backFace.inert=!flipped||!selected;
+    card._frontFace.setAttribute('aria-hidden',flipped?'true':'false');
+    card._backFace.setAttribute('aria-hidden',flipped?'false':'true');
+    card._frontButton.tabIndex=selected&&!flipped?0:-1;
+    card._backButton.tabIndex=selected&&flipped?0:-1;
+    if(card._lookMoreButton)card._lookMoreButton.tabIndex=selected&&flipped?0:-1;
+    if(focused&&selected)(flipped?card._backButton:card._frontButton).focus({preventScroll:true});
+  }
+  function resetNudgeFlips(){cards.forEach(function(card){setNudgeFlipped(card,false);});}
   function openGlanceCard() {
-    var item=activeDeck[picked];
+    var item=activeDeck[picked],card=cards[picked];
+    if(item.flip){setNudgeFlipped(card,!card._flipped);return;}
     if(item.destination)go(item.destination);
     else go('saver',{card:item});
+  }
+  function mountNudgeFaces(card,item,index){
+    var turn=document.createElement('div');turn.className='ncard-turn';
+    var front=document.createElement('div');front.className='ncard-face ncard-front';
+    var back=document.createElement('div');back.className='ncard-face ncard-back';
+    var frontButton=document.createElement('button');frontButton.type='button';frontButton.className='ncard-flip-toggle';
+    frontButton.setAttribute('aria-label','Flip card '+(index+1)+' to its back: '+item.card.h.replace(/\n/g,' '));
+    var backButton=document.createElement('button');backButton.type='button';backButton.className='ncard-flip-toggle';
+    backButton.setAttribute('aria-label','Flip card '+(index+1)+' back to its front');
+    var frontImage=document.createElement('img');frontImage.src=cardImage(item);frontImage.alt='';frontImage.draggable=false;
+    var backImage=document.createElement('img');backImage.src=item.backImage||cardImage(item);backImage.alt='';backImage.draggable=false;
+    backImage.loading='eager';backImage.decoding='async';
+    frontButton.appendChild(frontImage);backButton.appendChild(backImage);
+    front.appendChild(frontButton);back.appendChild(backButton);turn.appendChild(front);turn.appendChild(back);card.appendChild(turn);
+    card._frontFace=front;card._backFace=back;card._frontButton=frontButton;card._backButton=backButton;card._flipped=false;
+    [frontButton,backButton].forEach(function(button){button.addEventListener('click',function(e){
+      // Pointer taps are handled on pointerup; native clicks cover keyboard and assistive activation.
+      if(e.detail!==0||dragged)return;
+      if(index===picked)openGlanceCard();else{target=index;spin();}
+    });});
+    if(item.destination){
+      var more=document.createElement('button');more.type='button';more.className='ncard-back-lookmore';more.textContent='LOOK MORE →';
+      more.setAttribute('aria-label','Open Look More');
+      more.addEventListener('click',function(e){if(dragged)return;e.stopPropagation();if(card._flipped&&index===picked)go(item.destination);});
+      back.appendChild(more);card._lookMoreButton=more;
+    }
+    setNudgeFlipped(card,false);
   }
 
   function paintDeck(key) {
     activeDeck=buildStageDeck(key);
     cards.forEach(function(c){c.remove();});
-    cards=[];pos=0;target=0;picked=0;
-    activeDeck.forEach(function (item) {
+    cards=[];pos=0;target=0;picked=0;guidancePicked=-1;
+    nudgeDots.replaceChildren();nudgeDotButtons=[];nudgePicker.open=true;
+    nudgePicker.hidden=key==='awareness';
+    activeDeck.forEach(function (item,index) {
       var c = document.createElement("article");
       c.className = "ncard"+(item.invert?" is-inverted":"")+(item.destination==='lookmore'?" is-look-more":"");
       c.setAttribute("role", "option");
       c.setAttribute("aria-label",item.card.h.replace(/\n/g,' ')+(item.destination?' — '+item.card.w:''));
-      c.innerHTML='<img src="'+cardImage(item)+'" alt="">';
+      if(item.flip){c.className+=' has-flip';mountNudgeFaces(c,item,index);}
+      else c.innerHTML='<img src="'+cardImage(item)+'" alt="">';
       flow.appendChild(c);
       cards.push(c);
+      var dot=document.createElement('button');
+      dot.type='button';dot.className='nudge-dot';
+      dot.setAttribute('aria-label','Card '+(index+1)+' of '+activeDeck.length+': '+item.card.h.replace(/\n/g,' '));
+      dot.setAttribute('aria-controls','flow');
+      dot.addEventListener('click',function(){if(index!==picked)resetNudgeFlips();target=index;spin();});
+      nudgeDots.appendChild(dot);nudgeDotButtons.push(dot);
     });
     place(); mark();
   }
@@ -1776,7 +1866,18 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
   function mark() {
     var k = Math.round(pos);
     if (k !== picked) picked = k;
-    cards.forEach(function(c,i){c.setAttribute('aria-selected',i===picked?'true':'false');c.classList.toggle('is-centered',i===picked);});
+    cards.forEach(function(c,i){c.setAttribute('aria-selected',i===picked?'true':'false');c.classList.toggle('is-centered',i===picked);if(c._frontFace)setNudgeFlipped(c,i===picked?!!c._flipped:false);});
+    nudgeDotButtons.forEach(function(dot,i){
+      dot.classList.toggle('is-active',i===picked);
+      if(i===picked)dot.setAttribute('aria-current','true');else dot.removeAttribute('aria-current');
+    });
+    if(guidancePicked!==picked){
+      guidancePicked=picked;
+      nudgeConditions.replaceChildren();
+      activeDeck[picked].guidance.forEach(function(text){
+        var row=document.createElement('li');row.textContent=text;nudgeConditions.appendChild(row);
+      });
+    }
   }
 
   function spin() {
@@ -1796,6 +1897,7 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
   var grab = 0, grabPos = 0, turning = false, dragged = false, pressedCard = null;
 
   flow.addEventListener("pointerdown", function (e) {
+    if(e.target.closest('.ncard-back-lookmore'))return;
     turning = true; dragged = false; grab = e.clientX; grabPos = pos;
     pressedCard = e.target.closest(".ncard");
     if (spinning) { cancelAnimationFrame(spinning); spinning = null; }
@@ -1805,7 +1907,7 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
   flow.addEventListener("pointermove", function (e) {
     if (!turning) return;
     var d = e.clientX - grab;
-    if (Math.abs(d) > 5) dragged = true;
+    if (Math.abs(d) > 5&&!dragged){dragged=true;resetNudgeFlips();}
     var W = (cards[0] && cards[0].offsetWidth) || 220;
     pos = Math.max(-0.4, Math.min(activeDeck.length - 0.6, grabPos - d / (W * 0.56)));
     place(); mark();
@@ -1830,6 +1932,8 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
   flow.addEventListener("pointercancel", function () { letGo(true); });
 
   flow.addEventListener("keydown", function (e) {
+    if(e.target&&e.target.closest('.ncard-back-lookmore'))return;
+    if((e.key==='Enter'||e.key===' ')&&e.target&&e.target.closest('.ncard-flip-toggle'))return;
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       openGlanceCard();
@@ -1838,6 +1942,7 @@ body{font-weight:400;background:var(--bg);transition:background .2s,color .2s}bu
     var step = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
     if (!step) return;
     e.preventDefault();
+    resetNudgeFlips();
     target = Math.max(0, Math.min(activeDeck.length - 1, Math.round(pos) + step));
     spin();
   });
@@ -3278,6 +3383,70 @@ body .menu-item{
 @media (prefers-reduced-motion:reduce) {
   #v-stage.reflection-path .ncard.is-centered > img,
   #v-stage.reflection-path .ncard.is-centered.is-look-more > img { animation:none; }
+}
+
+/* Dots and card-specific guidance sit beneath the carousel, above unlocked navigation. */
+#v-stage.reflection-path > .page { min-height:565px; padding:8px 16px 14px; }
+#v-stage.reflection-path #stageAsk { margin:8px 0 4px; }
+#v-stage.reflection-path #glanceExperience { min-height:500px; gap:0; }
+#v-stage.reflection-path #glanceExperience .flow { min-height:265px; margin:0 -16px; container-type:size; }
+#v-stage.reflection-path #glanceExperience .ncard { width:clamp(165px,min(61vw,calc((100dvh - 350px - var(--stage-nav-space,0px))*.66)),260px); }
+@supports (height:1cqh) {
+  #v-stage.reflection-path #glanceExperience .ncard { width:clamp(165px,min(61vw,calc((100cqh - 22px)*.68)),260px); }
+}
+#v-stage.reflection-path .nudge-dots { flex:none; display:flex; justify-content:center; align-items:center; gap:0; height:28px; margin:0 0 10px; }
+#v-stage.reflection-path .nudge-dot { display:grid; place-items:center; width:24px; height:28px; border:0; padding:0; background:none; color:var(--ink); }
+#v-stage.reflection-path .nudge-dot::before { content:''; width:7px; height:7px; border-radius:50%; background:currentColor; opacity:.25; transition:opacity 180ms ease; }
+#v-stage.reflection-path .nudge-dot.is-active::before { opacity:1; }
+#v-stage.reflection-path .nudge-picker { flex:none; width:100%; margin-top:auto; border:1px solid var(--rule-sc); border-radius:24px; background:var(--fill); box-shadow:inset 0 0 0 1px rgba(128,128,128,.06); overflow:hidden; }
+#v-stage.reflection-path .nudge-picker summary { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:60px; padding:15px 20px; cursor:pointer; list-style:none; color:var(--ink); font:700 12px/1.3 Arial,sans-serif; letter-spacing:.08em; }
+#v-stage.reflection-path .nudge-picker summary::-webkit-details-marker { display:none; }
+#v-stage.reflection-path .nudge-picker-arrow { display:grid; place-items:center; flex:none; width:32px; height:32px; border:1px solid var(--rule); border-radius:50%; color:var(--ink-mid); }
+#v-stage.reflection-path .nudge-picker-arrow svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2; transform:rotate(-90deg); transition:transform 180ms ease; }
+#v-stage.reflection-path .nudge-picker[open] .nudge-picker-arrow svg { transform:none; }
+#v-stage.reflection-path .nudge-conditions { list-style:none; counter-reset:nudge-condition; margin:0; padding:0 20px 12px; }
+#v-stage.reflection-path .nudge-conditions li { counter-increment:nudge-condition; display:grid; grid-template-columns:25px 1fr; gap:12px; align-items:center; min-height:48px; padding:10px 0; color:var(--ink); font:400 15px/1.35 var(--body),Arial,sans-serif; }
+#v-stage.reflection-path .nudge-conditions li + li { border-top:1px solid var(--rule-sc); }
+#v-stage.reflection-path .nudge-conditions li::before { content:counter(nudge-condition,decimal-leading-zero); color:var(--ink-mid); opacity:.7; font:italic 700 12px/1 Arial,sans-serif; }
+@media (prefers-reduced-motion:reduce) {
+  #v-stage.reflection-path .nudge-dot::before,#v-stage.reflection-path .nudge-picker-arrow svg { transition:none; }
+}
+
+:root[data-theme="dark"] #v-stage.reflection-path .nudge-picker { background:#1b1b1b; border-color:rgba(255,255,255,.09); }
+#v-stage.reflection-path .nudge-conditions li { font-size:clamp(13px,3.8vw,15px); }
+
+/* Keep the guidance compact so the card remains the main visual. */
+#v-stage.reflection-path #glanceExperience .ncard { width:clamp(180px,min(66vw,calc((100dvh - 295px - var(--stage-nav-space,0px))*.70)),280px); }
+@supports (height:1cqh) {
+  #v-stage.reflection-path #glanceExperience .ncard { width:clamp(180px,min(66vw,calc((100cqh - 20px)*.70)),280px); }
+}
+#v-stage.reflection-path .nudge-dots { margin-bottom:6px; }
+#v-stage.reflection-path .nudge-picker { border-radius:20px; }
+#v-stage.reflection-path .nudge-picker summary { min-height:44px; padding:10px 16px; font-size:11px; letter-spacing:.07em; }
+#v-stage.reflection-path .nudge-picker-arrow { width:27px; height:27px; }
+#v-stage.reflection-path .nudge-conditions { padding:0 16px 8px; }
+#v-stage.reflection-path .nudge-conditions li { grid-template-columns:20px 1fr; gap:10px; min-height:36px; padding:7px 0; font-size:clamp(12px,3.4vw,14px); line-height:1.3; }
+#v-stage.reflection-path .nudge-conditions li::before { font-size:11px; }
+
+/* Inner rotation is independent of the carousel's outer translation and depth. */
+#v-stage.reflection-path .ncard.has-flip { perspective:1200px; }
+#v-stage.reflection-path .ncard-turn { position:relative; width:100%; height:100%; border-radius:inherit; transform-style:preserve-3d; -webkit-transform-style:preserve-3d; transform:rotateY(0deg); transition:transform 600ms cubic-bezier(.4,0,.2,1); }
+#v-stage.reflection-path .ncard.is-flipped .ncard-turn { transform:rotateY(180deg); }
+#v-stage.reflection-path .ncard-face { position:absolute; inset:0; border-radius:inherit; backface-visibility:hidden; -webkit-backface-visibility:hidden; transform:rotateY(0deg) translateZ(.1px); box-shadow:0 14px 28px rgba(0,0,0,.28); }
+#v-stage.reflection-path .ncard-back { transform:rotateY(180deg) translateZ(.1px); }
+#v-stage.reflection-path .ncard-flip-toggle { display:block; width:100%; height:100%; margin:0; padding:0; border:0; border-radius:inherit; background:transparent; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+#v-stage.reflection-path .ncard-flip-toggle img { display:block; width:100%; height:100%; border-radius:inherit; object-fit:contain; pointer-events:none; }
+#v-stage.reflection-path .ncard-flip-toggle:focus-visible { outline:2px solid #ebc66b; outline-offset:4px; }
+#v-stage.reflection-path .ncard-back-lookmore { position:absolute; z-index:1; bottom:6%; left:14%; width:72%; min-height:40px; padding:10px 12px; border:1px solid #aa802c; border-radius:22px; background:linear-gradient(110deg,#d1a449,#fff0ad,#d1a449); color:#111; font:700 11px/1.2 Arial,sans-serif; letter-spacing:.08em; cursor:pointer; }
+@media (prefers-reduced-motion:reduce) { #v-stage.reflection-path .ncard-turn { transition:none; } }
+
+#v-stage.reflection-path[data-stage="awareness"] .ncard.has-flip.is-centered { box-shadow:none; }
+#v-stage.reflection-path .ncard.has-flip.is-flipped::after { opacity:0; animation:none; }
+#v-stage.reflection-path .ncard.has-flip.is-centered .ncard-front img { animation:reflection-highlight-arrival 1100ms ease-in-out; }
+#v-stage.reflection-path .ncard.has-flip.is-centered.is-look-more .ncard-front img { animation:reflection-lookmore-arrival 1250ms ease-in-out; }
+@media (prefers-reduced-motion:reduce) {
+  #v-stage.reflection-path .ncard.has-flip.is-centered .ncard-front img,
+  #v-stage.reflection-path .ncard.has-flip.is-centered.is-look-more .ncard-front img { animation:none; }
 }
 </style>
 

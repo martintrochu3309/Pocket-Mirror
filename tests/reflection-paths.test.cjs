@@ -5,20 +5,23 @@ const vm = require('node:vm');
 const path = require('node:path');
 const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
 function setup() {
-  const flow = { listeners: {}, appendChild() {}, addEventListener(key, fn) { this.listeners[key] = fn; } };
-  const nav = {}, properties = {}, calls = [];
+  function element() {
+    const attributes = {}, classes = new Set(), children = [], listeners = {};
+    return { offsetWidth: 220, style: {}, attributes, classes, children, listeners,
+      setAttribute(key, value) { attributes[key] = value; }, removeAttribute(key) { delete attributes[key]; },
+      classList: { toggle: (key, on) => on ? classes.add(key) : classes.delete(key), add() {}, remove() {} },
+      appendChild(child) { children.push(child); }, replaceChildren() { children.length = 0; },
+      addEventListener(key, fn) { listeners[key] = fn; }, remove() {}
+    };
+  }
+  const flow = element(), nav = element(), dots = element(), conditions = element(), picker = element();
+  const properties = {}, calls = [];
+  const elements = { flow, bottomNav: nav, nudgeDots: dots, nudgeConditions: conditions, nudgePicker: picker };
   const context = vm.createContext({
     document: {
-      getElementById: id => id === 'flow' ? flow : nav,
+      getElementById: id => elements[id],
       documentElement: { style: { setProperty: (key, value) => { properties[key] = value; } } },
-      createElement: () => {
-        const attributes = {}, classes = new Set();
-        return { offsetWidth: 220, style: {}, attributes, classes,
-          setAttribute(key, value) { attributes[key] = value; },
-          classList: { toggle: (key, on) => on ? classes.add(key) : classes.delete(key), add() {}, remove() {} },
-          remove() {}
-        };
-      }
+      createElement: element
     },
     window: { matchMedia: () => ({ matches: true }) },
     cancelAnimationFrame() {}, requestAnimationFrame() { throw new Error('Reduced motion must settle immediately'); },
@@ -31,7 +34,7 @@ function setup() {
   vm.runInContext(html.slice(deckStart, html.indexOf('  window.addEventListener("resize"', deckStart)), context);
   const navStart = html.indexOf('  function syncNavigation(');
   vm.runInContext(html.slice(navStart, html.indexOf('  function show(', navStart)), context);
-  return { context, flow, nav, properties, calls,
+  return { context, flow, nav, dots, conditions, picker, properties, calls,
     key: key => flow.listeners.keydown({ key, preventDefault() {} }) };
 }
 for (const stage of ['awareness', 'acceptance', 'action']) {
@@ -42,14 +45,19 @@ for (const stage of ['awareness', 'acceptance', 'action']) {
     const backScale = Number(s.context.cards[1].style.transform.match(/scale\(([^)]+)\)/)[1]);
     assert.ok(Math.abs(backScale - .93 * .95) < .001, 'background neighbor is five percent smaller');
     assert.match(s.context.cards[0].style.transform, /translateZ\(20.0px\).*scale\(1.020\)/);
-    s.key('Enter'); assert.equal(s.calls.at(-1).route, 'saver');
+    s.key('Enter');
+    if(stage==='awareness'){assert.equal(s.context.cards[0]._flipped,true);assert.equal(s.calls.length,0);}
+    else assert.equal(s.calls.at(-1).route, 'saver');
     for (let i = 0; i < 4; i++) s.key('ArrowRight');
     assert.equal(s.context.picked, 4);
     assert.match(s.context.cards[4].className, /is-look-more/);
     assert.equal(s.context.cards[4].attributes['aria-selected'], 'true');
     assert.match(s.context.cards[4].style.transform, /translateZ\(32.0px\).*scale\(1.040\)/);
     s.key('ArrowRight'); assert.equal(s.context.picked, 4);
-    s.key('Enter'); assert.equal(s.calls.at(-1).route, 'lookmore');
+    s.key('Enter');
+    assert.equal(s.context.activeDeck[4].flip,undefined);
+    assert.equal(s.context.cards[4]._frontFace,undefined);
+    assert.equal(s.calls.at(-1).route, 'lookmore');
   });
 }
 test('bottom navigation is hidden until signup and respects full-screen surfaces', () => {
@@ -88,4 +96,72 @@ test('preview reset clears access only when requested and consumes the reset par
     if (reset) assert.equal(replaced, 'http://localhost:5173/?other=kept');
     else assert.equal(replaced, undefined);
   }
+});
+
+for (const stage of ['awareness', 'acceptance', 'action']) {
+  test(stage + ' dots select cards and update three guidance statements without opening a path', () => {
+    const s = setup(); s.context.paintDeck(stage);
+    assert.equal(s.dots.children.length, 5);
+    assert.equal(s.picker.open, true);
+    for (const index of [2, 4, 0, 3, 1]) {
+      s.dots.children[index].listeners.click();
+      assert.equal(s.context.picked, index);
+      assert.equal(s.dots.children.filter(dot => dot.attributes['aria-current'] === 'true').length, 1);
+      assert.equal(s.dots.children[index].attributes['aria-current'], 'true');
+      assert.deepEqual(s.conditions.children.map(row => row.textContent), Array.from(s.context.activeDeck[index].guidance));
+      assert.equal(s.conditions.children.length, 3);
+    }
+    assert.equal(s.calls.length, 0);
+    s.picker.open = false; s.key('ArrowRight');
+    assert.equal(s.picker.open, false, 'selection preserves the collapsed state');
+    s.context.paintDeck(stage); assert.equal(s.picker.open, true, 'new deck opens its panel');
+  });
+}
+
+test('Awareness hides its guidance panel without hiding it on the other paths', () => {
+  const s = setup();
+  for (const stage of ['awareness', 'acceptance', 'awareness', 'action']) {
+    s.context.paintDeck(stage);
+    assert.equal(s.picker.hidden, stage === 'awareness');
+    assert.equal(s.dots.children.length, 5);
+    assert.equal(s.context.cards.length, 5);
+  }
+});
+
+test('Awareness flips back and forth, keeps carousel transforms intact, and resets when changing cards', () => {
+  const s = setup(); s.context.paintDeck('awareness');
+  const first = s.context.cards[0], transform = first.style.transform;
+  s.key('Enter'); assert.equal(first._flipped, true);
+  assert.equal(first.style.transform, transform);
+  assert.equal(first._frontFace.inert, true); assert.equal(first._backFace.inert, false);
+  first._backButton.listeners.click({detail:0}); assert.equal(first._flipped, false);
+  s.key(' '); assert.equal(first._flipped, true);
+  s.dots.children[1].listeners.click(); assert.equal(first._flipped, false);
+  assert.equal(s.context.cards[1]._flipped, false);
+  s.dots.children[0].listeners.click(); assert.equal(first._flipped, false);
+  assert.equal(s.calls.length, 0);
+});
+test('Awareness pointer taps flip once and dragging does not flip or navigate', () => {
+  const s = setup(); s.context.paintDeck('awareness');
+  const first = s.context.cards[0];
+  const target = {closest: selector => selector === '.ncard' ? first : null};
+  s.flow.listeners.pointerdown({clientX:500,target,pointerId:1});
+  s.flow.listeners.pointerup(); assert.equal(first._flipped, true);
+  first._frontButton.listeners.click({detail:1}); assert.equal(first._flipped, true);
+  s.flow.listeners.pointerdown({clientX:500,target,pointerId:2});
+  s.flow.listeners.pointermove({clientX:340});
+  s.flow.listeners.pointerup();
+  assert.equal(first._flipped, false);
+  assert.ok(s.context.cards.every(card => !card._flipped));
+  assert.equal(s.calls.length, 0);
+});
+test('Awareness backs 1–4 exist and are preloaded as separate mounted faces', () => {
+  const s = setup(); s.context.paintDeck('awareness');
+  s.context.activeDeck.slice(0,4).forEach((item,index) => {
+    assert.equal(item.backImage, 'images/Nudge Card Back - Awareness ' + (index+1) + '.png');
+    assert.ok(fs.existsSync(path.join(__dirname,'..',item.backImage)));
+    const card = s.context.cards[index];
+    assert.equal(card._backButton.children[0].src, item.backImage);
+    assert.equal(card._backButton.children[0].loading, 'eager');
+  });
 });
